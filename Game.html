@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>samosaa – Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="Game.css">
+</head>
+<body>
+  <!-- Background FX -->
+  <div class="bg">
+    <div class="aurora"></div>
+    <div class="blob"></div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="hud">
+    <div class="hud-inner">
+      <div class="brand">
+        <div class="logo-img-wrap">
+          <img src="samosaa.png" alt="samosaa Logo" class="logo-img">
+        </div>
+        <div class="brand-text">samosaa</div>
+      </div>
+
+      <div class="hud-info">
+        <span>Room: <b id="roomVal">—</b></span>
+        <span>You: <b id="nameVal">—</b></span>
+        <span>Round: <b id="roundVal">1</b></span>
+        <span>Frame: <b id="frameVal">1</b></span>
+        <span>Status: <b id="status">Connecting…</b></span>
+      </div>
+
+     <div class="hud-spectators">
+  👁️ <span class="spectator-label">Spectators:</span>
+  <span id="spectatorCountTop">0</span>
+  <button id="reloadBtn" class="glitch-mini" title="If something glitches, reload the page">⚡ Glitch? Reload</button>
+</div>
+
+
+      <div class="hud-actions">
+        <button id="copyCode" class="mini" type="button">Copy code</button>
+         <a href="HomePage.html" class="leave mini">Leave</a>
+
+        <!-- Mobile menu button (shown only on phones via CSS) -->
+        <button id="mobileMenuBtn" class="mini mobile-menu-btn" type="button" aria-label="Open menu">☰</button>
+      </div>
+    </div>
+
+    <div id="actionMsg" class="action-msg" style="display:none;"></div>
+  </header>
+
+  <!-- Mobile drawer (mirrors topbar actions on small screens) -->
+  <div id="mobileMenu" class="mobile-menu-drawer hidden" aria-hidden="true">
+    <div class="mobile-menu-inner">
+      <div class="mobile-menu-head">
+        <div class="logo-small">
+          <img src="samosaa.png" alt="logo" />
+          <div class="brand-text">samosaa</div>
+        </div>
+        <button id="mobileMenuClose" class="mini" aria-label="Close menu">✕</button>
+      </div>
+
+      <div class="mobile-menu-links">
+        <div class="mobile-menu-row">Room: <b id="roomValMini">—</b></div>
+        <div class="mobile-menu-row">You: <b id="nameValMini">—</b></div>
+        <div class="mobile-menu-row">Round: <b id="roundValMini">1</b></div>
+        <div class="mobile-menu-row">Status: <b id="statusMini">—</b></div>
+
+        <div class="mobile-menu-actions">
+          <button id="copyCodeMini" class="mini">Copy code</button>
+          <button id="copyInviteMini" class="mini">Invite</button>
+          <a href="HomePage.html" class="leave mini">Leave</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="board  ">
+    <!-- LEFT: Chat -->
+    <aside id="chatPanel" class="chat-panel hidden">
+      <div class="chat-head">
+        <h3>Spectator Chat</h3>
+        <div class="spectator-summary" id="spectatorSummary">Correct: <span id="spectatorCorrectCount">0</span></div>
+      </div>
+      <div id="chatList" class="chat-list"></div>
+      <form id="chatForm" class="chat-form">
+        <input id="chatInput" autocomplete="off" placeholder="Type your guess or message…" />
+        <button type="submit">Send</button>
+      </form>
+    </aside>
+
+    <!-- CENTER: Movie frame -->
+    <section class="movie-section">
+      <div class="round-heading">
+        <h1 id="roundName">Hollywood Movies</h1>
+      </div>
+
+      <div id="movieBox" class="movie-frame is-blurred">
+        <img id="movieFrame" src="movie1.jpg" alt="Movie frame">
+
+        <div class="movie-name-card" id="movieNameCard" style="display:none;">
+          🎬 <span id="movieNameText">Unknown</span>
+        </div>
+
+        <div class="reveal-overlay" id="revealOverlay">
+          <button id="revealBtn" class="reveal-btn" style="display:none;">👀 Reveal Frame</button>
+          <div id="waitMsg" class="wait-msg" style="display:none;">Waiting for host to reveal…</div>
+          <div id="roundDoneMsg" class="round-done" style="display:none;">Round complete! 🎉</div>
+        </div>
+      </div>
+
+      <div class="frame-controls-below">
+        <button id="prevFrameBtn" class="control-btn warn" style="display:none;">⏮ Prev</button>
+        <button id="nextFrameBtn" class="control-btn" style="display:none;">⏭ Next</button>
+        <button id="showMovieBtn" class="control-btn info" style="display:none;">🎬 Show Movie Name</button>
+      </div>
+
+      <div id="roundBanner" class="round-banner" style="display:none;">
+        <div id="roundBannerText" class="round-banner-text"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Players -->
+    <aside id="playersPanel" class="players-panel">
+      <div class="buzzer-area" id="buzzerArea">
+        <button id="buzzerBtn" class="buzzer-btn" disabled>🔔 Press Buzzer</button>
+        <div id="buzzerStatus" class="buzzer-status"></div>
+      </div>
+
+      <h2 id="playersHeading" class="players-heading">Players (<span id="pcount">0</span>)</h2>
+
+      <div class="spectator-summary" id="spectatorSummarySide">
+        👁️ <b>Spectators:</b> <b id="spectatorCount">0</b> • Correct: <span id="spectatorCorrectCount">0</span>
+      </div>
+
+      <ul id="players" class="players-list"></ul>
+
+      <div class="buzz-panel">
+        <h3>Buzz Order (Frame <span id="frameVal2">1</span>)</h3>
+        <ol id="buzzList" class="buzz-list"></ol>
+      </div>
+    </aside>
+  </main>
+
+  <div id="winnerOverlay" class="winner-overlay" style="display:none;">
+    <div class="winner-card enhanced-winner-card"></div>
+  </div>
+
+  <div id="toast" class="toast" style="display:none;"></div>
+
+  <script type="module" src="spectatorChat.js"></script>
+  <script type="module" src="game.js"></script>
+
+  <!-- Mobile drawer wiring (fallback if JS isn't loaded in game.js yet) -->
+  <script>
+    (function(){
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      const mobileMenu = document.getElementById('mobileMenu');
+      const mobileMenuClose = document.getElementById('mobileMenuClose');
+      if (!mobileMenuBtn || !mobileMenu) return;
+      mobileMenuBtn.addEventListener('click', ()=>{
+        mobileMenu.classList.remove('hidden');
+        requestAnimationFrame(()=> mobileMenu.classList.add('open'));
+        mobileMenu.setAttribute('aria-hidden','false');
+      });
+      if (mobileMenuClose) mobileMenuClose.addEventListener('click', ()=>{
+        mobileMenu.classList.remove('open'); mobileMenu.setAttribute('aria-hidden','true'); setTimeout(()=> mobileMenu.classList.add('hidden'), 260);
+      });
+      // mirror a few values if available
+      function mirror(){
+        try{
+          const rv = document.getElementById('roomVal'); const nv = document.getElementById('nameVal'); const rvMini = document.getElementById('roomValMini'); const nvMini = document.getElementById('nameValMini');
+          if (rv && rvMini) rvMini.textContent = rv.textContent;
+          if (nv && nvMini) nvMini.textContent = nv.textContent;
+        }catch(e){}
+      }
+      setInterval(mirror, 900);
+    })();
+    document.getElementById('reloadBtn')?.addEventListener('click', () => location.reload());
+
+  </script>
+</body>
+</html>

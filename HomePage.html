@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/png" href="samosaa.png">
+  <title>samosaa – Home</title>
+  <meta name="theme-color" content="#0e0f1c" />
+  <link rel="stylesheet" href="HomePage.css">
+  <style>
+    /* Ensure How To modal sits above most app layers (desktop only) */
+    #howToModal { z-index: 150; }
+  </style>
+</head>
+<body>
+  <!-- Background FX -->
+  <div class="bg">
+    <div class="aurora" aria-hidden="true"></div>
+    <div class="blob" aria-hidden="true"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="card" role="region" aria-label="Room selector">
+      <div class="badge" id="whyBadge">How To Play</div>
+
+      <!-- Brand with samosaa logo -->
+      <div class="brand">
+        <div class="logo-img-wrap">
+          <img src="samosaa.png" alt="samosaa logo" class="logo-img">
+        </div>
+        <div class="brand-text">samosaa</div>
+      </div>
+
+      <h1 class="title">Jump in and play</h1>
+      <p class="subtitle">Create a room or join one — fast and simple.</p>
+
+      <!-- CREATE -->
+      <div id="createSection" class="section shown" aria-live="polite">
+        <div class="section-inner">
+          <div class="char-card" id="charCardCreate" aria-hidden="true" style="display:none;">
+            <div class="char-circle" id="charCircleCreate"></div>
+            <div class="char-label" id="charLabelCreate"></div>
+          </div>
+
+          <div class="row first-row">
+            <input id="nameCreate" class="input" type="text" maxlength="24"
+                   placeholder="Your name (e.g., Ajay) or choose a character" autocomplete="name" />
+            <button id="pickCharCreate" class="btn secondary small" title="Pick a character">Select Character</button>
+          </div>
+
+          <div class="row">
+            <button id="createBtn" class="btn" aria-label="Create Room">Create Room</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- JOIN -->
+      <div id="joinSection" class="section hidden" aria-live="polite" aria-hidden="true">
+        <div class="section-inner">
+          <div class="char-card" id="charCardJoin" aria-hidden="true" style="display:none;">
+            <div class="char-circle" id="charCircleJoin"></div>
+            <div class="char-label" id="charLabelJoin"></div>
+          </div>
+
+          <div class="row toggle-row" style="align-items:center; margin-bottom:8px;">
+            <div class="toggle-group" role="tablist" aria-label="Join mode">
+              <button id="joinModePlayer" class="mode-btn mode-active" role="tab" aria-selected="true">Join as player</button>
+              <button id="joinModeSpectator" class="mode-btn" role="tab">Join as spectator</button>
+            </div>
+            <div style="flex:1"></div>
+            <small class="muted">Spectators can watch & chat — not play.</small>
+          </div>
+
+          <div class="row first-row">
+            <input id="nameJoin" class="input" type="text" maxlength="24" placeholder="Your name" autocomplete="name"/>
+            <button id="pickCharJoin" class="btn secondary small" title="Pick a character">Select Character</button>
+          </div>
+
+          <div class="row">
+            <input id="roomCode" class="input" type="text" maxlength="10" placeholder="Room code" inputmode="latin" />
+            <button id="joinBtn" class="btn secondary" aria-label="Join Room">Join Room</button>
+            <button id="joinSpecBtn" class="btn secondary hidden" aria-label="Join as Spectator">Join as Spectator</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="hint" id="toggleHint">
+        Have a room code?
+        <button type="button" id="openJoin" class="linkish">Join one</button>
+        or
+        <button type="button" id="openJoinSpec" class="linkish">Join as a spectator</button>
+      </p>
+    </div>
+  </div>
+
+  <!-- Contact line placed OUTSIDE the card, fixed at bottom center -->
+  <div class="contact-footer" role="contentinfo" aria-label="Contact"
+       style="
+         position: fixed;
+         bottom: 16px;
+         left: 50%;
+         transform: translateX(-50%);
+         text-align: center;
+         font-size: 14px;
+         color: #cfe4ff;
+         background: rgba(15, 20, 30, 0.65);
+         padding: 6px 14px;
+         border-radius: 12px;
+         backdrop-filter: blur(6px);
+         z-index: 1000;
+       ">
+    Feedback or questions?
+    <a href="mailto:samosaa.team@gmail.com"
+       style="color: #fff; font-weight: 700; text-decoration: underline;">
+      samosaa.team@gmail.com
+    </a>
+  </div>
+
+  <!-- Floating Upload Button (bottom-right) -->
+  <button id="uploadFAB" class="fab" aria-haspopup="dialog" aria-controls="uploadModal" title="Upload frame">
+    Upload frames
+  </button>
+
+  <!-- Upload Modal (hidden by default) -->
+  <div id="uploadModal" class="modal hidden" role="dialog" aria-modal="true" aria-hidden="true">
+    <div id="uploadBackdrop" class="modal-backdrop"></div>
+    <div class="modal-panel" id="uploadPanel" role="document" aria-labelledby="uploadModalLabel" style="max-width:480px;">
+      <header class="modal-header">
+        <h2 id="uploadModalLabel" style="font-size:16px;margin:0;">Upload a frame</h2>
+        <button id="uploadModalClose" class="modal-close" aria-label="Close">✕</button>
+      </header>
+
+      <div style="margin-top:12px;">
+        <label class="muted" for="movieNameUpload">Movie name</label>
+        <input id="movieNameUpload" class="input" type="text" maxlength="120" placeholder="Movie name (e.g., Avengers)" />
+
+        <div style="height:8px"></div>
+
+        <label class="muted" for="frameFileUpload">Frame image</label>
+        <input id="frameFileUpload" class="input" type="file" accept="image/*" />
+
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:center;">
+          <button id="uploadSubmitBtn" class="btn">Upload</button>
+          <button id="uploadCancelBtn" class="btn secondary">Cancel</button>
+          <div id="uploadProgressSmall" class="muted" style="min-width:120px;"></div>
+        </div>
+
+        <p class="muted" style="margin-top:10px;font-size:12px;">Files will be submitted for admin review. Max recommended size ~3MB.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Character Picker Modal -->
+  <div id="charPicker" class="modal hidden" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-backdrop" id="charBackdrop"></div>
+    <div class="modal-panel" role="document" aria-labelledby="charPickerLabel">
+      <header class="modal-header">
+        <h2 id="charPickerLabel">Choose your character</h2>
+        <button id="charClose" class="modal-close" aria-label="Close">✕</button>
+      </header>
+      <div class="modal-body">
+        <p class="muted">Pick one character to represent you in the game. </p>
+
+        <ul id="charList" class="char-list" role="listbox" aria-label="Characters">
+          <!-- Items inserted by JS -->
+        </ul>
+
+        <div class="modal-actions">
+          <button id="charConfirm" class="btn">Confirm</button>
+          <button id="charCancel" class="btn secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How To Play modal (replaces the old "Why samosaa?" modal) -->
+  <div id="howToModal" class="modal hidden" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-backdrop" id="howToBackdrop"></div>
+    <div class="modal-panel" role="document" aria-labelledby="howToLabel" aria-describedby="howToDesc" style="max-width:640px;">
+      <header class="modal-header">
+        <h2 id="howToLabel" tabindex="-1">How to play</h2>
+        <button id="howToClose" class="modal-close" aria-label="Close">✕</button>
+      </header>
+
+      <div class="modal-body" id="howToDesc">
+        <ol style="margin:0; padding-left:18px; line-height:1.6;">
+          <li><strong>Create or join:</strong> Type your name (or pick a character). Create a room or join with a code.</li>
+          <li><strong>Players vs spectators:</strong> Players buzz and guess. Spectators can watch and chat (no playing).</li>
+          <li><strong>Buzz once per frame:</strong> You get one guess per frame — no spam. Buzz early if you’re confident.</li>
+          <li><strong>Rounds & frames:</strong> The host runs the game. Frames reveal gradually for each round.</li>
+          <li><strong>Room lock:</strong> Hosts can lock the room to stop late players. Spectators may still join.</li>
+          <li><strong>Upload frames:</strong> Use <em>Upload frames</em> to submit a movie frame. It’s reviewed before going live.</li>
+        </ol>
+
+        <p class="muted" style="margin-top:10px">
+          ⚠ Tip: If anything glitches, just reload — your session will reconnect instantly.
+        </p>
+
+        <label style="display:flex; gap:8px; align-items:center; margin-top:10px; user-select:none;">
+          <input id="howToDontShow" type="checkbox" />
+          <span class="muted">Don’t show again</span>
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button id="howToOk" class="btn">Got it</button>
+        <button id="howToLater" class="btn secondary">Maybe later</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading toast (bottom center) -->
+  <div id="loadingToast" class="loading-toast hidden" aria-live="polite" role="status">
+    <div id="loadingText">Loading…</div>
+  </div>
+
+  <script type="module" src="HomePage.js"></script>
+</body>
+</html>
+

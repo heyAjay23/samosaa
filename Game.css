@@ -1,0 +1,953 @@
+  /* Game.css - Polished UI for the game (fixed spectator rules + big reveal button)
+    Merged & updated:
+    - Spectator pill in header
+    - Hidden duplicate spectator summary in players panel (#spectatorSummarySide)
+    - Responsive below-columns wrapper for mobile: movie frame first, then players (left) + chat (right)
+    - .reveal-btn.small helper + smaller reveal on narrow screens
+    - Mobile drawer + compact topbar on phones
+  */
+
+  /* Reset-ish */
+  * { box-sizing: border-box; }
+  html,body {
+    height:100%;
+    margin:0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    color: #eaf0ff;
+    /* was a radial gradient — replaced with a solid */
+    background:#0b0d1a;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  /* Background visuals (disabled so no gradient glow appears) */
+  .bg { position: fixed; inset: 0; z-index: -2; overflow: hidden; display:none; }
+  .aurora { display:none; }
+  .blob { display:none; }
+
+  /* Header hud */
+  .hud { position: sticky; top:0; background: linear-gradient(180deg,rgba(10,12,20,0.85),rgba(10,12,20,0.6)); color:#eaf0ff; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.03); z-index:50; }
+  .hud-inner { display:flex; align-items:center; gap:12px; max-width:1400px; margin:0 auto; position:relative; width:100%; padding:0 8px; }
+  .brand { font-weight:700; font-size:18px; display:flex; align-items:center; gap:8px; }
+  .hud-info { display:flex; gap:12px; align-items:center; color:#cfe4ff; margin-left:12px; flex-wrap:wrap; }
+  .hud-info span { font-size:13px; }
+
+  /* Topbar actions */
+  .hud-actions { margin-left:auto; display:flex; gap:8px; align-items:center; }
+  .mini { background:rgba(255,255,255,0.06); color:#eaf0ff; border:1px solid rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px; cursor:pointer; font-size:13px; }
+  .mini:hover { background:rgba(255,255,255,0.09); }
+
+  /* small action message at top-right */
+  .action-msg { position: absolute; right: 12px; top: 56px; background: rgba(0,0,0,0.6); color: #eaf0ff; padding:6px 10px; border-radius:8px; font-weight:700; font-size:13px; border:1px solid rgba(255,255,255,0.03); z-index:60; }
+
+  /* ---------------- Spectator pill (highlight) ---------------- */
+  .hud-spectators {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-weight:800;
+    color:#eaf0ff;
+    margin-left:12px;
+    cursor: default;
+  }
+  
+  .hud-spectators:hover .spectator-label { display:inline-block; }
+
+  /* pill */
+  .hud-spectators > #spectatorCountTop {
+    background: linear-gradient(90deg, rgba(124,92,255,0.14), rgba(79,182,255,0.08));
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-weight: 900;
+    color: #fff;
+    box-shadow: 0 6px 22px rgba(14,20,40,0.32);
+    min-width: 36px;
+    text-align: center;
+    font-size:14px;
+    border: 1px solid rgba(255,255,255,0.03);
+  }
+
+  /* --------------------------------------------------------
+    Layout:
+    - Desktop: wide center frame + right sidebar OR 3-column when chat visible
+    - Mobile: movie frame first, then .below-columns containing players (left) and chat (right)
+    -------------------------------------------------------- */
+
+  /* Main board: default player view (wide frame | players) */
+  .board {
+    display: grid;
+    grid-template-columns: 1fr 340px; /* center frame | right sidebar */
+    gap: 18px;
+    width: calc(100vw - 16px);
+    max-width: 100vw;
+    margin: 14px auto;
+    padding: 0 8px;
+    align-items:flex-start;
+  }
+
+  /* When chat is visible (board--with-chat), use 3-column layout: chat | frame | players */
+  .board--with-chat {
+    display: grid;
+    grid-template-columns: 320px 1fr 340px;
+    gap: 20px;
+    align-items: start;
+    padding: 20px;
+  }
+
+  /* Movie section remains center column */
+  .movie-section { display:flex; flex-direction:column; align-items:center; gap:12px; position:relative; }
+
+  /* Below-columns wrapper: used for mobile flow (movie first, then players + chat) */
+  .below-columns { display:none; gap:12px; }
+
+  /* Players panel (right sidebar) */
+  .players-panel { width:320px; min-width:260px; background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01)); padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); margin-top:28px; max-height: calc(100vh - 120px); overflow:auto; }
+
+  /* Round heading above frame */
+  .round-heading { width:100%; display:flex; justify-content:center; }
+  .round-heading h1 { margin:0; font-size:20px; color:#fff; background:linear-gradient(90deg,#fff,#cfe4ff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+  /* Movie frame wrapper (made larger & more flexible) */
+  .movie-frame {
+    width:100%;
+    max-width: calc(100vw - 380px);
+    /* keep a subtle dark panel (not a page background) */
+    background:rgba(0,0,0,0.55);
+    border-radius:14px;
+    padding:12px;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:64vh;
+    box-shadow: 0 28px 70px rgba(0,0,0,0.5);
+    margin: 6px 0 18px 0;
+  }
+
+  /* On very wide screens, allow frame to grow */
+  @media (min-width:1600px) {
+    .movie-frame { max-width: calc(100vw - 420px); min-height:70vh; }
+  }
+
+  /* Constrain the image to maintain aspect and fill area nicely */
+  .movie-frame img {
+    width:100%;
+    height:100%;
+    border-radius:10px;
+    display:block;
+    object-fit:cover;
+    box-shadow:0 14px 40px rgba(2,6,23,0.6);
+    transition: filter .25s ease, transform .25s ease;
+  }
+
+  /* Blurred state while unrevealed */
+  .movie-frame.is-blurred img { filter: blur(25px) brightness(.88) saturate(.9); transform: scale(1.02); }
+
+  /* Movie name card bottom-center */
+  .movie-name-card {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, rgba(0,0,0,0.7), rgba(255,255,255,0.02));
+    padding: 10px 14px;
+    border-radius: 12px;
+    color: #eaf0ff;
+    font-weight: 800;
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.04);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    max-width: calc(100% - 40px);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Reveal overlay + centered button */
+  .reveal-overlay {
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:12px;
+    z-index:40;
+    pointer-events: none;
+  }
+  .reveal-overlay > * { pointer-events: auto; }
+
+  /* Primary reveal button (large) */
+  .reveal-btn {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    width:min(62%, 720px);
+    max-width:320px;
+    padding:0px 0px;
+    font-size:15px;
+    font-weight:900;
+    border-radius:28px;
+    border:0;
+    cursor:pointer;
+    background: linear-gradient(90deg,#ff6ea0 0%, #ff9b6b 55%);
+    color:#08121a;
+    box-shadow:0 30px 110px rgba(255,110,140,0.18), 0 6px 20px rgba(0,0,0,0.45);
+    transition: transform .12s ease, box-shadow .12s ease, filter .08s ease;
+    line-height:3;
+    backdrop-filter: blur(4px);
+  }
+  .reveal-btn::before {
+    font-size:22px;
+    transform:translateY(-1px);
+  }
+
+  /* Small reveal helper — use .reveal-btn.small when you want a compact reveal */
+  .reveal-btn.small {
+    padding:8px 10px;
+    font-size:14px;
+    width:auto;
+    border-radius:10px;
+  }
+
+  /* hover/active styles */
+  .reveal-btn:hover,
+  .reveal-btn:focus {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow:0 36px 130px rgba(255,110,140,0.22), 0 8px 26px rgba(0,0,0,0.55);
+  }
+  .reveal-btn:active { transform: translateY(0.5px) scale(.995); }
+  .reveal-btn:focus-visible { box-shadow:0 36px 100px rgba(255,110,140,0.22), 0 0 0 8px rgba(127,76,255,0.12); }
+
+  /* Wait + round done messages */
+  .wait-msg { color:#eaf0ff; font-weight:700; padding:6px 10px; background:rgba(0,0,0,0.25); border-radius:8px; }
+  .round-done { padding:8px 12px; background: linear-gradient(90deg,#ffd36b,#ff9a6b); border-radius:10px; color:#08121a; font-weight:800; }
+
+  /* Frame controls below */
+  .frame-controls-below { display:flex; gap:12px; justify-content:center; margin-top:6px; align-items:center; flex-wrap:wrap; }
+  .control-btn {
+    padding:12px 18px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.03);
+    color:#eaf0ff;
+    cursor:pointer;
+    font-weight:800;
+    min-width: 110px;
+  }
+  .control-btn.warn { background:#ff7b6b; color:#07121a; border:none; box-shadow:0 10px 26px rgba(255,123,107,0.18); }
+  .control-btn.info { background:#6dd3ff; color:#08121a; border:none; box-shadow:0 10px 26px rgba(109,211,255,0.14); }
+
+  /* Round banner */
+  .round-banner {
+    display:none;
+    margin-top:8px;
+    width:min(860px,92%);
+    text-align:center;
+    margin-left:auto;
+    margin-right:auto;
+    background:linear-gradient(90deg,#7a59ff,#4f46e5);
+    padding:10px 14px;
+    border-radius:12px;
+    color:white;
+    z-index:40;
+    box-shadow:0 18px 40px rgba(50,40,120,0.28);
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  .round-banner-text { font-weight:800; }
+
+  /* Buzzer and status */
+  .buzzer-area { display:flex; align-items:center; gap:10px; margin-top:20px; margin-bottom:12px; }
+  .buzzer-btn { font-size:16px; padding:10px 14px; border-radius:10px; background:#ff4d6d; border:none; color:white; cursor:pointer; box-shadow:0 10px 24px rgba(255,77,109,0.18); font-weight:800; }
+  .buzzer-btn:disabled { opacity:.45; cursor:not-allowed; filter:grayscale(.2); }
+  .buzzer-status { font-size:13px; color:#dbeafe; font-weight:700; }
+
+  /* Players */
+  .players-heading { margin:6px 0 8px 0; font-size:16px; color:#eaf0ff; }
+
+  /* Player list layout */
+  .players-list { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; }
+
+  /* Primary player-row container */
+  .player-row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 12px;
+    border-radius:10px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+    border:1px solid rgba(255,255,255,0.02);
+    gap:12px;
+    min-height:56px;
+  }
+
+  /* Left part (avatar + name) */
+  .player-row > div:first-child {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+    flex:1 1 auto;
+  }
+
+  /* Avatar */
+  .avatar-small, .initial, .avatar-initial {
+    width:40px !important;
+    height:40px !important;
+    flex:0 0 40px;
+    border-radius:999px !important;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: linear-gradient(90deg,#ffffff14,#ffffff06);
+    color:#08121a;
+    font-weight:800;
+    border:2px solid rgba(255,255,255,0.02);
+  }
+
+  /* Avatar image */
+  .avatar-small img, .player-row img {
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+
+  /* Name area — takes remaining space, ellipsizes if too long */
+  .player-row .player-name,
+  .player-row .p-left,
+  .player-row > div:first-child > div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1 1 auto;
+    font-weight: 800;
+    color:#f0f9ff;
+    font-size:15px;
+    line-height:1;
+  }
+
+  /* Right side (score + buttons) */
+  .player-row > div:last-child {
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content:flex-end;
+    flex:0 0 auto;
+  }
+
+  /* Score badge and award button */
+  .score-badge { background: linear-gradient(90deg,#fff,#cfe4ff); color:#04111a; padding:6px 10px; border-radius:999px; font-weight:900; border:1px solid rgba(0,0,0,0.06); min-width:44px; text-align:center; }
+  .awardBtn { padding:6px 8px; border-radius:8px; background:#7a59ff; color:#fff; border:none; cursor:pointer; font-weight:800; box-shadow:0 8px 18px rgba(122,89,255,0.14); }
+
+  /* Spectator count (hidden duplicate) */
+  #spectatorSummarySide { display:none !important; } /* hide duplicate line in players panel */
+
+  /* Buzz list */
+  .buzz-panel { margin-top:12px; }
+  .buzz-list { padding-left:16px; margin:6px 0 0 0; }
+  .buzz-list li { display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-radius:8px; background:rgba(255,255,255,0.02); margin-bottom:6px; }
+
+  /* Winner overlay */
+  .winner-overlay { position:fixed; inset:0; background:rgba(6,8,15,0.6); display:flex; align-items:center; justify-content:center; z-index:120; }
+  .enhanced-winner-card { background: linear-gradient(180deg,#0b1220,#071029); padding:22px; border-radius:18px; color:#fff; min-width:360px; max-width:980px; box-shadow:0 30px 80px rgba(2,6,23,0.85); border:1px solid rgba(255,255,255,0.03); display:flex; flex-direction:column; gap:16px; align-items:center; }
+  /* ... winner styles truncated in snippet above retained as-is ... */
+
+  /* Toast (bottom center) */
+  .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 24px; background: rgba(7,10,20,0.95); color: #eaf0ff; padding:10px 16px; border-radius:12px; box-shadow:0 12px 36px rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.03); font-weight:700; z-index:200; }
+
+  /* Chat panel (spectator-only) */
+  .chat-panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    min-height: 420px;
+    max-height: calc(100vh - 160px);
+    overflow: hidden;
+  }
+  .chat-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+  .chat-head h3 { margin:0; font-size:16px; }
+  .spectator-summary { font-size:13px; color: #c9d4e8; }
+  .chat-list { flex:1 1 auto; overflow:auto; padding:8px; display:flex; flex-direction:column; gap:8px; border-radius:8px; background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(255,255,255,0.00)); }
+  .chat-list .msg { padding:8px 10px; border-radius:8px; background: rgba(255,255,255,0.02); color: #eaf0ff; }
+  .chat-list .msg.correct { background: rgba(55,200,120,0.12); color: #eafff2; }
+  .chat-list .msg.wrong { background: rgba(240,80,80,0.08); color: #ffdfe0; }
+  .msg-who { font-weight:800; font-size:13px; margin-bottom:4px; }
+  .msg-text { font-size:14px; line-height:1.2; }
+  .msg-meta { font-size:11px; color:var(--muted); margin-top:6px; }
+  .chat-form { display:flex; gap:8px; margin-top:10px; align-items:center; }
+  .chat-form input { flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.03); background: rgba(11,12,20,0.6); outline:none; color: #eaf0ff; }
+  .chat-form button { padding:10px 12px; border-radius:10px; border:none; background: linear-gradient(90deg,#6dd3ff,#4fb6ff); color:#07121a; font-weight:900; }
+
+  /* small screens: stack vertically & use .below-columns pattern */
+  @media (max-width: 980px) {
+    /* Convert to single column layout */
+    .board--with-chat { grid-template-columns: 1fr; grid-auto-rows: auto; gap: 12px; padding: 12px; }
+    .board { display:flex; flex-direction:column; gap:12px; padding: 12px; }
+
+    /* Compact topbar for phones */
+    .hud-inner { gap: 8px; padding: 6px 12px; }
+    .hud-info { display: none !important; }
+    .hud-actions .mini { display: none; }
+    .mobile-menu-btn { display: inline-flex; margin-left: auto; }
+
+    .brand { gap:6px; }
+    .logo-img-wrap { width:40px; height:40px; border-radius:8px; }
+    .brand-text { display: none; }
+
+    .hud-spectators { margin-left: 8px; font-size:13px; }
+    .hud-spectators .spectator-label { display: none; }
+
+    /* Ensure movie frame is first on mobile */
+    .movie-section { order: 1; }
+    #chatPanel { order: 2; }
+    .players-panel { order: 3; }
+
+    /* Make movie frame full width first */
+    .movie-frame { max-width:100%; min-height:40vh; padding:8px; }
+
+    /* Use below-columns: two columns (players left, chat right) for medium-small; on narrow phones they stack */
+    .below-columns { display:grid; grid-template-columns: 1fr 1fr; gap:10px; width:100%; }
+    .players-panel, .chat-panel { max-height:45vh; overflow:auto; }
+
+    /* mobile reveal variations */
+    .reveal-btn { width:calc(100% - 32px); padding:14px 18px; border-radius:18px; }
+  }
+
+  /* On very small phones stack the below-columns vertically */
+  @media (max-width:420px) {
+    .below-columns { grid-template-columns: 1fr; }
+    .players-panel, .chat-panel { max-height:none; }
+  }
+
+  /* Responsive rules */
+  @media (max-width:1200px) {
+    .movie-frame { min-height:50vh; max-width:980px; }
+  }
+  @media (max-width:920px) {
+    .players-panel{ width:100%; max-width:900px; margin-top:12px; }
+    .movie-frame{ max-width:92%; min-height:320px; padding:8px; }
+  }
+
+  /* Logo / HUD tweaks */
+  .logo-img-wrap { width: 48px; height: 48px; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .logo-img { width: 150%; height: 150%; object-fit: contain; display:block; }
+  .brand-text { font-weight: 900; font-size: 18px; color: #eaf0ff; }
+
+  /* Mobile menu button (hidden by default, shown on small screens) */
+  .mobile-menu-btn { display: none; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px; color:#eaf0ff; cursor:pointer; }
+
+  /* Mobile drawer styles (visual only — JS opens/closes by toggling .open) */
+  .mobile-menu-drawer {
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: min(92%, 360px);
+    background: linear-gradient(180deg,#071025,#0b1220);
+    z-index: 2200;
+    box-shadow: 0 24px 60px rgba(2,6,23,0.7);
+    transform: translateX(110%);
+    transition: transform 240ms cubic-bezier(.2,.8,.2,1);
+    border-left: 1px solid rgba(255,255,255,0.03);
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+  }
+  .mobile-menu-drawer.open { transform: translateX(0%); }
+  .mobile-menu-drawer.hidden { display: none; }
+
+  .mobile-menu-inner .mobile-menu-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .mobile-menu-inner .logo-small { display:flex; align-items:center; gap:8px; }
+  .mobile-menu-inner img { width:36px; height:36px; object-fit:contain; border-radius:8px; }
+  .mobile-menu-links { margin-top:12px; color:#cfe4ff; display:flex; flex-direction:column; gap:10px; }
+  .mobile-menu-row { font-weight:700; }
+  .mobile-menu-actions { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+
+  /* Utility */
+  .hidden { display:none !important; }
+
+  /* -----------------------
+    Spectator safety rules
+  ----------------------- */
+  body.spectator-view #buzzerArea,
+  body.spectator-view #buzzerBtn,
+  body.spectator-view .buzzer-btn {
+    display: none !important;
+    pointer-events: none !important;
+  }
+  body.spectator-view #prevFrameBtn,
+  body.spectator-view #nextFrameBtn,
+  body.spectator-view #revealBtn,
+  body.spectator-view #showMovieBtn {
+    display: none !important;
+    pointer-events: none !important;
+  }
+  body.spectator-view .awardBtn,
+  body.spectator-view .winner-actions {
+    display: none !important;
+    pointer-events: none !important;
+  }
+  body.spectator-view #players,
+  body.spectator-view .players-list,
+  body.spectator-view .player-row {
+    display: block !important;
+    pointer-events: none;
+    opacity: 0.98;
+  }
+
+  /* Ensure the players panel doesn't overlap on tiny screens */
+  .players-panel { max-height: calc(100vh - 160px); overflow: auto; padding-right: 8px; }
+
+  /* Small-screen tweaks */
+  @media (max-width:720px) {
+    .reveal-btn { width:calc(100% - 48px); padding:14px 18px; font-size:17px; border-radius:18px; }
+    .player-row { padding:8px; }
+    .player-row .player-name { font-size:14px; }
+    .control-btn { min-width: 90px; padding:10px 12px; }
+  }
+
+  /* Spectator view tweaks */
+  body.spectator-view main.board {
+    display: grid;
+    grid-template-columns: 320px 1fr 320px; /* chat | frame | players */
+    gap: 12px;
+    align-items: start;
+    padding: 0 8px;
+    max-width: 100vw;
+  }
+  body.spectator-view .movie-frame {
+    max-width: 100% !important;
+    min-height: 70vh !important;
+  }
+  body.spectator-view .players-panel {
+    margin-top: 0;
+    width: 100%;
+    max-height: calc(100vh - 120px);
+  }
+
+  /* End of file */
+
+  /* small screens: movie first, then chat + players side by side */
+  @media (max-width: 980px) {
+    .board--with-chat, .board {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 12px;
+    }
+
+    /* Movie frame first */
+    .movie-frame {
+      max-width: 100%;
+      min-height: 45vh;
+      padding: 8px;
+      order: 1;
+    }
+
+    /* Below-columns wrapper holds chat + players side-by-side */
+    .below-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* chat | players */
+      gap: 12px;
+      width: 100%;
+      order: 2;
+    }
+
+    /* Chat and players responsive tweaks */
+    .chat-panel, .players-panel {
+      max-height: 50vh;
+      overflow: auto;
+    }
+    .chat-panel { order: 1; }
+    .players-panel { order: 2; }
+  }
+
+  /* On small phones: stack vertically (chat above players) */
+  @media (max-width: 480px) {
+    .below-columns {
+      grid-template-columns: 1fr;
+    }
+    .chat-panel, .players-panel {
+      max-height: none;
+    }
+  }
+
+  /* ===== Chat-panel mobile/desktop fallback fixes (appended) ===== */
+  #chatPanel, .chat-panel, #chatPanel.chat-panel {
+    display: flex !important;
+    flex-direction: column;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+    z-index: 60;
+  }
+  #chatPanel .chat-list,
+  .chat-panel .chat-list {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  @media (max-width: 980px) {
+    #chatPanel, .chat-panel { order: 2; max-height: 48vh; min-height: 160px; }
+    #chatPanel .chat-list, .chat-panel .chat-list { max-height: calc(48vh - 120px); }
+  }
+  @media (min-width: 981px) {
+    #chatPanel, .chat-panel { order: 0; max-height: calc(100vh - 160px); }
+    #chatPanel .chat-list, .chat-panel .chat-list { max-height: calc(100vh - 220px); }
+  }
+  body.spectator-view #chatPanel,
+  body.spectator-view .chat-panel {
+    display: flex !important;
+    pointer-events: auto !important;
+    opacity: 1 !important;
+  }
+  @media (max-width:600px) {
+    .chat-form { position: sticky; bottom: 0; background: linear-gradient(180deg, rgba(0,0,0,0.0), rgba(0,0,0,0.05)); padding: 8px 0 6px; }
+  }
+
+  /* ===== SPECTATOR MOBILE: fix overlap (top row fixed height, bottom row separate) ===== */
+  @media (max-width:768px){
+    /* The grid itself */
+    body.spectator-view main.board,
+    body.spectator-view .board,
+    body.spectator-view .board--with-chat{
+      grid-template-rows: 46svh 1fr !important;   /* top row fixed (frame), bottom row fills */
+    }
+
+    /* Make the top area exactly one row tall */
+    body.spectator-view .movie-section{
+      grid-area: movie !important;
+      height: 46svh !important;        /* match the grid row */
+      min-height: 46svh !important;
+      overflow: hidden !important;
+      position: relative !important;
+      z-index: 1 !important;
+    }
+    body.spectator-view .movie-frame{
+      height: 100% !important;         /* fill the movie-section */
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    /* Bottom split: ensure these NEVER sit on top of the frame */
+    body.spectator-view #playersPanel,
+    body.spectator-view .players-panel,
+    body.spectator-view #chatPanel{
+      position: relative !important;
+      inset: auto !important;
+      transform: none !important;
+      margin: 0 !important;
+      height: calc(54svh - var(--gap,10px)) !important;
+      max-height: calc(54svh - var(--gap,10px)) !important;
+      overflow: auto !important;
+      z-index: 2 !important;
+      background-clip: padding-box;
+    }
+
+    /* Explicitly map the areas */
+    body.spectator-view #playersPanel{ grid-area: players !important; }
+    body.spectator-view #chatPanel{    grid-area: chat !important; display:flex !important; flex-direction:column !important; }
+
+    /* Chat internals remain usable */
+    body.spectator-view #chatPanel .chat-list{ flex:1 1 auto; overflow-y:auto !important; -webkit-overflow-scrolling:touch; }
+    body.spectator-view #chatPanel .chat-form{ position: sticky; bottom: 0; padding-top:6px; background:linear-gradient(180deg,transparent,rgba(0,0,0,.06)); }
+
+    /* Make sure header is fully visible and above everything */
+    body.spectator-view .hud{ position:fixed; top:0; left:0; right:0; height:var(--hud-h,56px); z-index:1000 !important; }
+    body.spectator-view main.board,
+    body.spectator-view .board,
+    body.spectator-view .board--with-chat{
+      margin-top: var(--hud-h,56px) !important;
+    }
+
+    /* Keep “Leave Room” visible on mobile header */
+    body.spectator-view .hud-actions .mini{ display:none; }
+    body.spectator-view .hud-actions .mini[title*="Leave"],
+    body.spectator-view .hud-actions #leaveBtn,
+    body.spectator-view .hud-actions .leave-btn{
+      display:inline-flex !important;
+    }
+  }
+
+  /* Ultra narrow fallback: stacked (no overlap possible) */
+  @media (max-width:420px){
+    body.spectator-view main.board,
+    body.spectator-view .board,
+    body.spectator-view .board--with-chat{
+      grid-template-rows: auto auto auto !important;
+      grid-template-columns: 1fr !important;
+      grid-template-areas:
+        "movie"
+        "players"
+        "chat" !important;
+    }
+    body.spectator-view .movie-section{
+      height: auto !important; min-height: 42svh !important;
+    }
+    body.spectator-view #playersPanel,
+    body.spectator-view #chatPanel{
+      height: auto !important; max-height: none !important;
+    }
+  }
+
+
+  /* ---- Spectator counters: make them look clickable ---- */
+  #spectatorCount,
+  #spectatorCountTop {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    user-select: none;
+    transition:
+      transform .06s ease,
+      box-shadow .12s ease,
+      background .12s ease,
+      border-color .12s ease;
+  }
+
+  /* optional little glowing dot before the number */
+  #spectatorCount::before,
+  #spectatorCountTop::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: #22d3ee;
+    box-shadow: 0 0 8px rgba(34, 211, 238, 0.9);
+  }
+
+  /* hover/active feedback */
+  #spectatorCount:hover,
+  #spectatorCountTop:hover {
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+  }
+
+  #spectatorCount:active,
+  #spectatorCountTop:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+  }
+
+  /* visible focus ring (if element can receive focus) */
+  #spectatorCount:focus-visible,
+  #spectatorCountTop:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px #0ea5e9,
+      0 2px 10px rgba(14, 165, 233, 0.35);
+  }
+
+
+  #mobileWarningOverlay {
+    font-family: system-ui, sans-serif;
+    backdrop-filter: blur(4px);
+  }
+
+  /* Add to Game.css */
+  .chat-list .msg { display:flex; gap:6px; padding:6px 8px; }
+  .chat-list .msg.correct { font-weight:700; }
+
+
+/* Tiny “Glitch? Reload” button in top bar */
+.glitch-mini {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.05);
+  color: #bde0ff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.glitch-mini:hover {
+  background: rgba(255,255,255,0.15);
+  transform: scale(1.05);
+}
+.glitch-mini:active {
+  transform: scale(0.96);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===== Spotlight Focus (blur everything except a target) ===== */
+.hp-spotlight{
+  position:fixed; inset:0; z-index:9998; pointer-events:none;
+  backdrop-filter:blur(8px) saturate(.9) brightness(.9);
+  background:rgba(6,10,18,.45);
+  --sx:50vw; --sy:50vh; --sr:120px;
+  -webkit-mask:radial-gradient(circle var(--sr) at var(--sx) var(--sy), transparent 98%, #000 100%);
+  mask:radial-gradient(circle var(--sr) at var(--sx) var(--sy), transparent 98%, #000 100%);
+  opacity:0; transition:opacity .18s ease;
+}
+.hp-spotlight.show{opacity:1}
+
+.hp-spotlight-ring{
+  position:fixed; z-index:9999; pointer-events:none;
+  border-radius:16px;
+  box-shadow:0 0 0 2px #fff, 0 0 0 10px rgba(255,255,255,.12);
+  width:100px; height:60px; transform:translate(-50%,-50%);
+  opacity:0; transition:opacity .18s ease;
+}
+.hp-spotlight-ring.show{opacity:1}
+
+.hp-spotlight-arrow{
+  position:fixed; z-index:10000; width:180px; height:90px;
+  pointer-events:none; opacity:0; transition:opacity .18s ease;
+}
+.hp-spotlight-arrow.show{opacity:1}
+
+.hp-spotlight-note{
+  position:fixed; z-index:10001; max-width:280px;
+  background:#0b1020; color:#e7efff;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px; padding:10px 12px; font-size:13px; line-height:1.35;
+  box-shadow:0 14px 36px rgba(2,6,23,.6); pointer-events:none;
+  opacity:0; transition:opacity .18s ease;
+}
+.hp-spotlight-note.show{opacity:1}
+.hp-spotlight-note::after{
+  content:""; position:absolute; width:0; height:0; border:8px solid transparent;
+  border-top-color:#0b1020; bottom:-16px; left:24px;
+}
+.hp-spotlight-note[data-pos="below"]::after{
+  border-top-color:transparent; border-bottom-color:#0b1020; top:-16px; bottom:auto;
+}
+
+
+
+
+
+
+
+/* ===== Spotlight Focus (blur everything except a target) ===== */
+.hp-spotlight{
+  position:fixed; inset:0;
+  z-index:100001;
+  pointer-events:none;
+  backdrop-filter: blur(8px) saturate(.9) brightness(.9);
+  background: rgba(6,10,18,.45);
+  --sx: 50vw; --sy: 50vh; --sr: 120px;
+  -webkit-mask: radial-gradient(circle var(--sr) at var(--sx) var(--sy), transparent 98%, #000 100%);
+  mask: radial-gradient(circle var(--sr) at var(--sx) var(--sy), transparent 98%, #000 100%);
+  opacity:0; transition: opacity .18s ease;
+}
+.hp-spotlight.show{ opacity:1; }
+
+.hp-spotlight-ring{
+  position:fixed; z-index:100002; pointer-events:none;
+  transform: translate(-50%,-50%);
+  border-radius:16px;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 10px rgba(255,255,255,.12);
+  width:100px; height:60px; opacity:0; transition: opacity .18s ease;
+}
+.hp-spotlight-ring.show{ opacity:1; }
+
+.hp-spotlight-arrow{
+  position:fixed; z-index:100003; pointer-events:none;
+  width:180px; height:90px; opacity:0; transition: opacity .18s ease;
+}
+.hp-spotlight-arrow.show{ opacity:1; }
+
+.hp-spotlight-note{
+  position:fixed; z-index:100004; pointer-events:none;
+  max-width:280px; background:#0b1020; color:#e7efff;
+  border:1px solid rgba(255,255,255,.08); border-radius:12px;
+  padding:10px 12px; font-size:13px; line-height:1.35;
+  box-shadow:0 14px 36px rgba(2,6,23,.6); opacity:0; transition: opacity .18s ease;
+}
+.hp-spotlight-note.show{ opacity:1; }
+.hp-spotlight-note::after{
+  content:""; position:absolute; width:0; height:0; border:8px solid transparent;
+  border-top-color:#0b1020; bottom:-16px; left:24px;
+}
+.hp-spotlight-note[data-pos="below"]::after{
+  border-top-color:transparent; border-bottom-color:#0b1020; top:-16px; bottom:auto;
+}
+
+
+
+
+
+
+
+
+/* ===== LAYOUT HOTFIX (place LAST in Game.css) ===== */
+
+/* Default: 2 columns (Frame | Players). Use !important to beat older rules. */
+header + main.board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px !important;
+  gap: 20px;
+  align-items: start;
+  grid-auto-columns: initial;
+}
+
+/* Only become 3 columns when we *explicitly* opt in */
+header + main.board.board--with-chat {
+  grid-template-columns: 280px minmax(0, 1fr) 320px !important;
+}
+
+/* If something applied width to chat, hard-remove it when hidden */
+.chat-panel.hidden {
+  display: none !important;
+  width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Prevent long content from forcing extra width */
+.chat-panel, .movie-section, .players-panel {
+  min-width: 0 !important;
+}
+
+/* Keep players panel sane */
+.players-panel { width: 320px; }
+
+/* Responsive collapse (optional) */
+@media (max-width: 1100px) {
+  header + main.board,
+  header + main.board.board--with-chat {
+    grid-template-columns: 1fr !important;
+  }
+  .players-panel { width: auto; }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

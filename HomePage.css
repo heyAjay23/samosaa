@@ -1,0 +1,867 @@
+:root{ --bg:#0b0d1a; --glass:#0f1230cc; --glass-border:#2a2f60; --txt:#eaf0ff; --muted:#a3acc0;
+  --primary:#845BFF; --primary-2:#5AE0B5; --primary-3:#FF7AB6; --ring:#7c5cff55; }
+*{box-sizing:border-box} html,body{height:100%}
+body{margin:0; color:var(--txt); font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background: radial-gradient(1200px 800px at 10% 20%, #141a48 0%, #0b0d1a 50%) fixed; overflow-x:hidden;}
+.bg{position:fixed; inset:0; overflow:hidden; z-index:-2;}
+.aurora{position:absolute; width:120vmax; height:120vmax; left:-10vmax; top:-20vmax;
+  background:radial-gradient(40% 35% at 60% 40%, #6c4dff55 0%, #0000 60%),
+             radial-gradient(40% 35% at 30% 70%, #3ce1b744 0%, #0000 60%),
+             radial-gradient(30% 30% at 75% 75%, #ff6aa752 0%, #0000 60%);
+  filter: blur(40px) saturate(120%); animation: drift 22s ease-in-out infinite alternate;}
+.blob{position:absolute; width:55vmax; height:55vmax; right:-15vmax; bottom:-10vmax;
+  background: conic-gradient(from 120deg, #6f49ff, #32e0a7, #ff7aa7, #6f49ff);
+  filter: blur(80px) opacity(.18); animation: swirl 28s linear infinite;}
+@keyframes drift{to{transform:translate3d(6vw,-3vh,0) rotate(5deg)}} @keyframes swirl{to{transform: rotate(360deg)}}
+.wrap{min-height:100dvh; display:grid; place-items:center; padding:28px}
+.card{width:min(720px, 94vw); background: linear-gradient(180deg, #14183bcc, #0e1133cc);
+  border:1px solid var(--glass-border); border-radius:24px; padding:26px; box-shadow: 0 18px 40px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.05);
+  backdrop-filter: blur(14px); position:relative; overflow:hidden;}
+.brand{display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.4px; color:#dbe0ff; user-select:none;}
+.logo{width:36px; height:36px; border-radius:12px; background: conic-gradient(from 240deg, var(--primary), var(--primary-2), var(--primary-3), var(--primary));
+  box-shadow: 0 6px 24px #7c5cff44;}
+.title{font-size:clamp(24px, 3.2vw, 34px); margin:14px 0 6px; font-weight:900; letter-spacing:.3px;
+  background: linear-gradient(90deg, #f5f7ff, #bcd0ff); -webkit-background-clip: text; background-clip:text; color:transparent;}
+.subtitle{margin:0 0 10px; color:var(--muted); font-size:14.5px}
+
+/* layout pieces */
+.row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+.input{flex:1 1 220px; min-width:210px; background:#0b0f2a; border:1px solid #2b2f63; color:var(--txt);
+  border-radius:14px; padding:10px; font-size:14px; height:44px; outline:none; transition:border .18s, box-shadow .18s, transform .05s;}
+.input:focus{border-color:var(--primary); box-shadow: 0 0 0 4px var(--ring), 0 10px 24px #0008;}
+.btn{position:relative; overflow:hidden; border:0; border-radius:14px; padding:14px 18px; font-weight:800; cursor:pointer; color:#0b0d1a;
+  background: linear-gradient(90deg, var(--primary), #9b84ff); box-shadow: 0 10px 26px #7c5cff44; font-size:15px; transition: transform .06s ease, box-shadow .2s;}
+.btn.secondary{ background: linear-gradient(90deg, var(--primary-2), #9ff1d7); box-shadow:0 10px 26px #2fe0a344; color:#04201a}
+.btn.small{ padding:7px 10px; font-size:13px; height:auto; align-self:center; }
+.btn:active{transform:translateY(1px) scale(.99)}
+.hint{margin-top:6px; font-size:14px; color:var(--muted)}
+.hint button{background:none; border:0; color:#cfe0ff; cursor:pointer; font-weight:800; padding:0; text-decoration:underline; text-underline-offset:3px;}
+.section{display:grid; grid-template-rows: 1fr; overflow:clip; transition: grid-template-rows .35s ease, opacity .35s ease, margin .35s ease, transform .35s ease;}
+.section-inner{padding-top:0; margin-top:0;}
+.hidden{grid-template-rows:0fr; opacity:0; margin-top:0; transform:translateY(-6px)} 
+.shown {grid-template-rows:1fr; opacity:1; margin-top:4px; transform:translateY(0)}
+.first-row{margin-top:0;}
+.badge{position:absolute; right:18px; top:18px; font-size:12px; color:#0c102a; background:linear-gradient(90deg,#ffd66b,#ff9e6b);
+  padding:6px 10px; border-radius:999px; font-weight:900; box-shadow:0 6px 18px #ffb86b4a; cursor:pointer;}
+@media (max-width:480px){ .card{padding:20px} .subtitle{font-size:13.5px} }
+
+/* Character card above input - separate design */
+.char-card{width:100%; display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:10px;}
+.char-circle{width:110px; height:110px; border-radius:999px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); display:flex; align-items:center; justify-content:center; font-size:48px; box-shadow: 0 16px 40px rgba(0,0,0,0.6); border: 6px solid rgba(255,255,255,0.02); overflow:hidden; }
+.char-circle img{width:100%; height:100%; object-fit:cover; display:block;}
+.char-label{font-weight:900; font-size:14px; color:#dfe9ff; text-align:center;}
+
+/* Modal (character picker) */
+.modal { position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:120; }
+.modal-backdrop { position:absolute; inset:0; background: rgba(3,6,12,0.6); backdrop-filter: blur(2px); }
+.modal-panel { display: flex;                 /* NEW: stack header/body/actions */
+  flex-direction: column; position:relative; width: min(820px, 96vw); max-height: 86vh; overflow:auto; background: linear-gradient(180deg, #0f1230cc, #0b0d1a); border:1px solid var(--glass-border); border-radius:14px; padding:0; box-shadow: 0 20px 60px rgba(0,0,0,.6); z-index:130;overflow: hidden; }
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+}
+.modal-header h2 { margin:0; font-size:18px; }
+.modal-close { background:transparent; border:0; color:var(--muted); font-size:18px; cursor:pointer; padding:6px 8px; border-radius:10px; }
+.modal-body p.muted{ color:var(--muted); margin-top:6px; margin-bottom:12px; }
+.modal-body {
+  padding: 16px 20px;
+  overflow: auto;         /* NEW: allow scrolling here */
+  flex: 1 1 auto;         /* NEW: fill remaining vertical space */
+  -webkit-overflow-scrolling: touch;
+}
+/* Character list - larger card style */
+.char-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  align-items: start;
+  /* Allow grid to grow inside the scrolling body without affecting panel height */
+}.char-item { display:flex; flex-direction:column; align-items:center; gap:10px; padding:12px; border-radius:14px; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.02); cursor:pointer; transition: transform .12s ease, box-shadow .12s ease; text-align:center; min-height:190px; }
+.char-item.selected{ transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,0.6); border-color: var(--primary); }
+.char-thumb-large{ width:120px; height:120px; border-radius:999px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.03); font-size:48px; overflow:hidden; border:6px solid rgba(255,255,255,0.02); }
+.char-thumb-large img{ width:100%; height:100%; object-fit:cover; display:block; }
+.char-meta{ display:flex; flex-direction:column; gap:6px; align-items:center;}
+.char-name{ font-weight:900; font-size:16px; color:#dfe9ff; }
+.char-sub{ font-size:12px; color:var(--muted); }
+
+/* Modal actions */
+.modal-actions {
+  position: sticky;       /* NEW: stick to bottom of modal-panel */
+  bottom: 0;              /* NEW */
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 20px;     /* keep consistent spacing with body/header */
+  background: linear-gradient(180deg, rgba(11,13,26,0.0), rgba(11,13,26,0.92)); /* subtle fade so content under isn't jarring */
+  border-top: 1px solid rgba(255,255,255,0.02); /* small divider */
+  z-index: 140;
+}
+/* misc */
+.muted{ color:var(--muted); }
+.hidden{display:none !important}
+
+/* Logo sizing wrapper (applied to the small logo you kept) */
+.logo-img-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-img {
+  width: 150%;
+  height: 150%;
+  object-fit: contain;
+  display:block;
+}
+.brand-text {
+  font-weight: 900;
+  font-size: 18px;
+  color: #eaf0ff;
+}
+
+/* Loading toast (bottom center) */
+.loading-toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 22px;
+  background: linear-gradient(180deg, #111827, #0b1320);
+  border: 1px solid rgba(255,255,255,0.04);
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 18px 36px rgba(0,0,0,0.5);
+  font-weight:700;
+  color:#eaf0ff;
+  z-index: 9999;
+}
+.loading-toast.hidden { display:none; }
+
+
+.logo-img-wrap {
+  width: 80px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-img {
+  width: 150%;
+  height: 150%;
+  object-fit: contain;
+  display: block;
+}
+.brand-text {
+  font-weight: 900;
+  font-size: 18px;
+  color: #eaf0ff;
+}
+
+/* --- Join mode pill buttons (player / spectator) --- */
+.toggle-group { display:inline-flex; gap:8px; border-radius:12px; background:rgba(255,255,255,0.02); padding:6px; align-items:center; }
+
+/* base */
+.mode-btn {
+  border: 0;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 800;
+  background: transparent;
+  color: var(--muted);
+  transition: transform .08s ease, box-shadow .12s ease, background .12s ease, color .12s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1;
+  min-width: 140px;
+  justify-content: center;
+}
+
+/* player-specific look */
+.mode-btn.player::before {
+  content: "👤";
+  display: inline-block;
+  transform: translateY(-1px);
+}
+
+/* spectator-specific look */
+.mode-btn.spectator::before {
+  content: "👀";
+  display: inline-block;
+  transform: translateY(-1px);
+}
+
+/* active state (selected) */
+.mode-active {
+  background: linear-gradient(90deg, var(--primary), #9b84ff);
+  color: #08121a;
+  box-shadow: 0 10px 30px rgba(124,92,255,0.16);
+  transform: translateY(-2px);
+}
+
+/* hover/focus */
+.mode-btn:hover, .mode-btn:focus {
+  color: #eaf0ff;
+  outline: none;
+  background: rgba(255,255,255,0.03);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+}
+
+/* keyboard focus ring */
+.mode-btn:focus-visible {
+  box-shadow: 0 0 0 6px var(--ring);
+  border-radius: 10px;
+}
+
+/* --- Style the Join buttons so they visually differ --- */
+/* Player join button (regular join) */
+#joinBtn {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 900;
+  background: linear-gradient(90deg, #6dd3ff, #4fb6ff); /* cool blue */
+  color: #07121a;
+  box-shadow: 0 10px 26px rgba(80,180,255,0.12);
+  border: none;
+  min-width: 130px;
+}
+
+/* Spectator join button */
+#joinSpecBtn {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 900;
+  background: linear-gradient(90deg, #ffd36b, #ff9a6b); /* warm gold/orange */
+  color: #08121a;
+  box-shadow: 0 10px 26px rgba(255,150,60,0.12);
+  border: none;
+  min-width: 160px;
+}
+
+/* hover / active states for both join buttons */
+#joinBtn:hover, #joinSpecBtn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+}
+#joinBtn:active, #joinSpecBtn:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+/* small-screen layout: stack join controls */
+@media (max-width:520px) {
+  .row > #roomCode, .row > #nameJoin { flex-basis:100%; }
+  #joinBtn, #joinSpecBtn { width:100%; min-width: auto; margin-top:8px; }
+  .toggle-group { width:100%; justify-content:center; }
+  .mode-btn { min-width: 120px; padding:8px 10px; font-size:13px; }
+}
+
+/* ================================
+   ADDITIONS: Floating Upload FAB + upload-modal overrides
+   ================================ */
+
+/* Floating action button (pill) */
+.fab{
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1400;
+  background: linear-gradient(90deg, var(--primary-2), var(--primary));
+  color: #07121a;
+  border: 0;
+  padding: 12px 16px;
+  border-radius: 999px;
+  box-shadow: 0 12px 36px rgba(76,61,255,0.18), 0 6px 18px rgba(2,6,23,0.45);
+  cursor: pointer;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transform-origin: center;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.fab:active { transform: translateY(1px) scale(.995); box-shadow: 0 8px 26px rgba(76,61,255,0.14); }
+
+/* small text sizing on tiny screens */
+@media (max-width:420px) {
+  .fab { padding:10px 12px; font-size:13px; right:12px; bottom:12px; }
+}
+
+/* Upload modal specific overrides using your modal-panel style */
+#uploadModal { /* keep same stacking/context as other modals */
+  position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:140;
+}
+#uploadBackdrop { position:absolute; inset:0; background: rgba(3,6,12,0.6); backdrop-filter: blur(4px); }
+
+/* upload panel is intentionally narrower and compact */
+#uploadPanel {
+  width: min(520px, 94vw);
+  max-height: 86vh;
+  overflow: hidden;
+  display:flex;
+  flex-direction:column;
+  border-radius:14px;
+  background: linear-gradient(180deg, rgba(15,18,48,0.96), rgba(11,13,26,0.96));
+  border: 1px solid rgba(255,255,255,0.03);
+  box-shadow: 0 28px 60px rgba(4,6,20,0.6);
+  padding: 12px;
+}
+
+/* keep header style consistent but slightly tighter */
+#uploadPanel .modal-header { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.02); }
+#uploadPanel .modal-header h2 { font-size:16px; color:#eaf0ff; font-weight:900; }
+
+/* body area */
+#uploadPanel .modal-body {
+  padding: 12px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  overflow:auto;
+}
+
+/* input overrides inside panel for visual consistency */
+#uploadPanel .input {
+  background: #081028;
+  border: 1px solid rgba(255,255,255,0.03);
+  color: var(--txt);
+  height:44px;
+  padding:10px 12px;
+  border-radius:12px;
+}
+#uploadPanel input[type="file"] {
+  padding:6px 10px;
+  background: transparent;
+  border-radius:10px;
+  border: 1px dashed rgba(255,255,255,0.03);
+  height:44px;
+}
+
+/* action row inside upload panel */
+#uploadPanel .actions {
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+  align-items:center;
+  padding: 10px 12px 8px;
+  border-top: 1px solid rgba(255,255,255,0.02);
+  background: linear-gradient(180deg, rgba(11,13,26,0.0), rgba(11,13,26,0.9));
+}
+
+/* smaller progress text */
+#uploadProgressSmall { color: var(--muted); min-width:80px; font-weight:700; }
+
+/* ensure modal-close button matches theme */
+#uploadPanel .modal-close { background:transparent; border:0; color:var(--muted); font-size:18px; cursor:pointer; padding:6px 8px; border-radius:8px; }
+
+/* responsive */
+@media (max-width:520px) {
+  #uploadPanel { width: min(94vw, 420px); padding:10px; }
+  #uploadPanel .modal-body { padding:10px; }
+  #uploadPanel .actions { padding:8px 10px; }
+  .fab { right:12px; bottom:12px; }
+}
+
+/* subtle appear animation for upload panel */
+@keyframes popIn {
+  from { transform: translateY(8px) scale(.98); opacity:0; }
+  to   { transform: translateY(0) scale(1); opacity:1; }
+}
+#uploadPanel { animation: popIn .18s cubic-bezier(.2,.9,.3,1); }
+
+/* helpful small utility for centering content inside panel body */
+.upload-row { display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+
+/* ensure the upload modal doesn't override existing modal rules elsewhere */
+#uploadModal.hidden { display:none !important; }
+
+/* Ensure How To modal sits above mobile-warning overlay */
+#howToModal { z-index: 150; }
+
+
+
+
+
+
+
+:root{ --bg:#0b0d1a; --glass:#0f1230cc; --glass-border:#2a2f60; --txt:#eaf0ff; --muted:#a3acc0;
+  --primary:#845BFF; --primary-2:#5AE0B5; --primary-3:#FF7AB6; --ring:#7c5cff55; }
+*{box-sizing:border-box} html,body{height:100%}
+body{margin:0; color:var(--txt); font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background: radial-gradient(1200px 800px at 10% 20%, #141a48 0%, #0b0d1a 50%) fixed; overflow-x:hidden;}
+.bg{position:fixed; inset:0; overflow:hidden; z-index:-2;}
+.aurora{position:absolute; width:120vmax; height:120vmax; left:-10vmax; top:-20vmax;
+  background:radial-gradient(40% 35% at 60% 40%, #6c4dff55 0%, #0000 60%),
+             radial-gradient(40% 35% at 30% 70%, #3ce1b744 0%, #0000 60%),
+             radial-gradient(30% 30% at 75% 75%, #ff6aa752 0%, #0000 60%);
+  filter: blur(40px) saturate(120%); animation: drift 22s ease-in-out infinite alternate;}
+.blob{position:absolute; width:55vmax; height:55vmax; right:-15vmax; bottom:-10vmax;
+  background: conic-gradient(from 120deg, #6f49ff, #32e0a7, #ff7aa7, #6f49ff);
+  filter: blur(80px) opacity(.18); animation: swirl 28s linear infinite;}
+@keyframes drift{to{transform:translate3d(6vw,-3vh,0) rotate(5deg)}} @keyframes swirl{to{transform: rotate(360deg)}}
+.wrap{min-height:100dvh; display:grid; place-items:center; padding:28px}
+.card{width:min(720px, 94vw); background: linear-gradient(180deg, #14183bcc, #0e1133cc);
+  border:1px solid var(--glass-border); border-radius:24px; padding:26px; box-shadow: 0 18px 40px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.05);
+  backdrop-filter: blur(14px); position:relative; overflow:hidden;}
+.brand{display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:.4px; color:#dbe0ff; user-select:none;}
+.logo{width:36px; height:36px; border-radius:12px; background: conic-gradient(from 240deg, var(--primary), var(--primary-2), var(--primary-3), var(--primary));
+  box-shadow: 0 6px 24px #7c5cff44;}
+.title{font-size:clamp(24px, 3.2vw, 34px); margin:14px 0 6px; font-weight:900; letter-spacing:.3px;
+  background: linear-gradient(90deg, #f5f7ff, #bcd0ff); -webkit-background-clip: text; background-clip:text; color:transparent;}
+.subtitle{margin:0 0 10px; color:var(--muted); font-size:14.5px}
+
+/* layout pieces */
+.row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+.input{flex:1 1 220px; min-width:210px; background:#0b0f2a; border:1px solid #2b2f63; color:var(--txt);
+  border-radius:14px; padding:10px; font-size:14px; height:44px; outline:none; transition:border .18s, box-shadow .18s, transform .05s;}
+.input:focus{border-color:var(--primary); box-shadow: 0 0 0 4px var(--ring), 0 10px 24px #0008;}
+.btn{position:relative; overflow:hidden; border:0; border-radius:14px; padding:14px 18px; font-weight:800; cursor:pointer; color:#0b0d1a;
+  background: linear-gradient(90deg, var(--primary), #9b84ff); box-shadow: 0 10px 26px #7c5cff44; font-size:15px; transition: transform .06s ease, box-shadow .2s;}
+.btn.secondary{ background: linear-gradient(90deg, var(--primary-2), #9ff1d7); box-shadow:0 10px 26px #2fe0a344; color:#04201a}
+.btn.small{ padding:7px 10px; font-size:13px; height:auto; align-self:center; }
+.btn:active{transform:translateY(1px) scale(.99)}
+.hint{margin-top:6px; font-size:14px; color:var(--muted)}
+.hint button{background:none; border:0; color:#cfe0ff; cursor:pointer; font-weight:800; padding:0; text-decoration:underline; text-underline-offset:3px;}
+.section{display:grid; grid-template-rows: 1fr; overflow:clip; transition: grid-template-rows .35s ease, opacity .35s ease, margin .35s ease, transform .35s ease;}
+.section-inner{padding-top:0; margin-top:0;}
+.hidden{grid-template-rows:0fr; opacity:0; margin-top:0; transform:translateY(-6px)} 
+.shown {grid-template-rows:1fr; opacity:1; margin-top:4px; transform:translateY(0)}
+.first-row{margin-top:0;}
+.badge{position:absolute; right:18px; top:18px; font-size:12px; color:#0c102a; background:linear-gradient(90deg,#ffd66b,#ff9e6b);
+  padding:6px 10px; border-radius:999px; font-weight:900; box-shadow:0 6px 18px #ffb86b4a; cursor:pointer;}
+@media (max-width:480px){ .card{padding:20px} .subtitle{font-size:13.5px} }
+
+/* Character card above input - separate design */
+.char-card{width:100%; display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:10px;}
+.char-circle{width:110px; height:110px; border-radius:999px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); display:flex; align-items:center; justify-content:center; font-size:48px; box-shadow: 0 16px 40px rgba(0,0,0,0.6); border: 6px solid rgba(255,255,255,0.02); overflow:hidden; }
+.char-circle img{width:100%; height:100%; object-fit:cover; display:block;}
+.char-label{font-weight:900; font-size:14px; color:#dfe9ff; text-align:center;}
+
+/* Modal (character picker) */
+.modal { position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:120; }
+.modal-backdrop { position:absolute; inset:0; background: rgba(3,6,12,0.6); backdrop-filter: blur(2px); }
+.modal-panel { display: flex;                 /* NEW: stack header/body/actions */
+  flex-direction: column; position:relative; width: min(820px, 96vw); max-height: 86vh; overflow:auto; background: linear-gradient(180deg, #0f1230cc, #0b0d1a); border:1px solid var(--glass-border); border-radius:14px; padding:0; box-shadow: 0 20px 60px rgba(0,0,0,.6); z-index:130;overflow: hidden; }
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.02);
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+}
+.modal-header h2 { margin:0; font-size:18px; }
+.modal-close { background:transparent; border:0; color:var(--muted); font-size:18px; cursor:pointer; padding:6px 8px; border-radius:10px; }
+.modal-body p.muted{ color:var(--muted); margin-top:6px; margin-bottom:12px; }
+.modal-body {
+  padding: 16px 20px;
+  overflow: auto;         /* NEW: allow scrolling here */
+  flex: 1 1 auto;         /* NEW: fill remaining vertical space */
+  -webkit-overflow-scrolling: touch;
+}
+/* Character list - larger card style */
+.char-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+  align-items: start;
+  /* Allow grid to grow inside the scrolling body without affecting panel height */
+}.char-item { display:flex; flex-direction:column; align-items:center; gap:10px; padding:12px; border-radius:14px; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.02); cursor:pointer; transition: transform .12s ease, box-shadow .12s ease; text-align:center; min-height:190px; }
+.char-item.selected{ transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,0.6); border-color: var(--primary); }
+.char-thumb-large{ width:120px; height:120px; border-radius:999px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.03); font-size:48px; overflow:hidden; border:6px solid rgba(255,255,255,0.02); }
+.char-thumb-large img{ width:100%; height:100%; object-fit:cover; display:block; }
+.char-meta{ display:flex; flex-direction:column; gap:6px; align-items:center;}
+.char-name{ font-weight:900; font-size:16px; color:#dfe9ff; }
+.char-sub{ font-size:12px; color:var(--muted); }
+
+/* Modal actions */
+.modal-actions {
+  position: sticky;       /* NEW: stick to bottom of modal-panel */
+  bottom: 0;              /* NEW */
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 20px;     /* keep consistent spacing with body/header */
+  background: linear-gradient(180deg, rgba(11,13,26,0.0), rgba(11,13,26,0.92)); /* subtle fade so content under isn't jarring */
+  border-top: 1px solid rgba(255,255,255,0.02); /* small divider */
+  z-index: 140;
+}
+/* misc */
+.muted{ color:var(--muted); }
+.hidden{display:none !important}
+
+/* Logo sizing wrapper (applied to the small logo you kept) */
+.logo-img-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-img {
+  width: 150%;
+  height: 150%;
+  object-fit: contain;
+  display:block;
+}
+.brand-text {
+  font-weight: 900;
+  font-size: 18px;
+  color: #eaf0ff;
+}
+
+/* Loading toast (bottom center) */
+.loading-toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 22px;
+  background: linear-gradient(180deg, #111827, #0b1320);
+  border: 1px solid rgba(255,255,255,0.04);
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: 0 18px 36px rgba(0,0,0,0.5);
+  font-weight:700;
+  color:#eaf0ff;
+  z-index: 9999;
+}
+.loading-toast.hidden { display:none; }
+
+
+.logo-img-wrap {
+  width: 80px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.logo-img {
+  width: 150%;
+  height: 150%;
+  object-fit: contain;
+  display: block;
+}
+.brand-text {
+  font-weight: 900;
+  font-size: 18px;
+  color: #eaf0ff;
+}
+
+/* --- Join mode pill buttons (player / spectator) --- */
+.toggle-group { display:inline-flex; gap:8px; border-radius:12px; background:rgba(255,255,255,0.02); padding:6px; align-items:center; }
+
+/* base */
+.mode-btn {
+  border: 0;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 800;
+  background: transparent;
+  color: var(--muted);
+  transition: transform .08s ease, box-shadow .12s ease, background .12s ease, color .12s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1;
+  min-width: 140px;
+  justify-content: center;
+}
+
+/* player-specific look */
+.mode-btn.player::before {
+  content: "👤";
+  display: inline-block;
+  transform: translateY(-1px);
+}
+
+/* spectator-specific look */
+.mode-btn.spectator::before {
+  content: "👀";
+  display: inline-block;
+  transform: translateY(-1px);
+}
+
+/* active state (selected) */
+.mode-active {
+  background: linear-gradient(90deg, var(--primary), #9b84ff);
+  color: #08121a;
+  box-shadow: 0 10px 30px rgba(124,92,255,0.16);
+  transform: translateY(-2px);
+}
+
+/* hover/focus */
+.mode-btn:hover, .mode-btn:focus {
+  color: #eaf0ff;
+  outline: none;
+  background: rgba(255,255,255,0.03);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+}
+
+/* keyboard focus ring */
+.mode-btn:focus-visible {
+  box-shadow: 0 0 0 6px var(--ring);
+  border-radius: 10px;
+}
+
+/* --- Style the Join buttons so they visually differ --- */
+/* Player join button (regular join) */
+#joinBtn {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 900;
+  background: linear-gradient(90deg, #6dd3ff, #4fb6ff); /* cool blue */
+  color: #07121a;
+  box-shadow: 0 10px 26px rgba(80,180,255,0.12);
+  border: none;
+  min-width: 130px;
+}
+
+/* Spectator join button */
+#joinSpecBtn {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-weight: 900;
+  background: linear-gradient(90deg, #ffd36b, #ff9a6b); /* warm gold/orange */
+  color: #08121a;
+  box-shadow: 0 10px 26px rgba(255,150,60,0.12);
+  border: none;
+  min-width: 160px;
+}
+
+/* hover / active states for both join buttons */
+#joinBtn:hover, #joinSpecBtn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+}
+#joinBtn:active, #joinSpecBtn:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+/* small-screen layout: stack join controls */
+@media (max-width:520px) {
+  .row > #roomCode, .row > #nameJoin { flex-basis:100%; }
+  #joinBtn, #joinSpecBtn { width:100%; min-width: auto; margin-top:8px; }
+  .toggle-group { width:100%; justify-content:center; }
+  .mode-btn { min-width: 120px; padding:8px 10px; font-size:13px; }
+}
+
+/* ================================
+   ADDITIONS: Floating Upload FAB + upload-modal overrides
+   ================================ */
+
+/* Floating action button (pill) */
+.fab{
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1400;
+  background: linear-gradient(90deg, var(--primary-2), var(--primary));
+  color: #07121a;
+  border: 0;
+  padding: 12px 16px;
+  border-radius: 999px;
+  box-shadow: 0 12px 36px rgba(76,61,255,0.18), 0 6px 18px rgba(2,6,23,0.45);
+  cursor: pointer;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transform-origin: center;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.fab:active { transform: translateY(1px) scale(.995); box-shadow: 0 8px 26px rgba(76,61,255,0.14); }
+
+/* small text sizing on tiny screens */
+@media (max-width:420px) {
+  .fab { padding:10px 12px; font-size:13px; right:12px; bottom:12px; }
+}
+
+/* Upload modal specific overrides using your modal-panel style */
+#uploadModal { /* keep same stacking/context as other modals */
+  position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:140;
+}
+#uploadBackdrop { position:absolute; inset:0; background: rgba(3,6,12,0.6); backdrop-filter: blur(4px); }
+
+/* upload panel is intentionally narrower and compact */
+#uploadPanel {
+  width: min(520px, 94vw);
+  max-height: 86vh;
+  overflow: hidden;
+  display:flex;
+  flex-direction:column;
+  border-radius:14px;
+  background: linear-gradient(180deg, rgba(15,18,48,0.96), rgba(11,13,26,0.96));
+  border: 1px solid rgba(255,255,255,0.03);
+  box-shadow: 0 28px 60px rgba(4,6,20,0.6);
+  padding: 12px;
+}
+
+/* keep header style consistent but slightly tighter */
+#uploadPanel .modal-header { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.02); }
+#uploadPanel .modal-header h2 { font-size:16px; color:#eaf0ff; font-weight:900; }
+
+/* body area */
+#uploadPanel .modal-body {
+  padding: 12px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  overflow:auto;
+}
+
+/* input overrides inside panel for visual consistency */
+#uploadPanel .input {
+  background: #081028;
+  border: 1px solid rgba(255,255,255,0.03);
+  color: var(--txt);
+  height:44px;
+  padding:10px 12px;
+  border-radius:12px;
+}
+#uploadPanel input[type="file"] {
+  padding:6px 10px;
+  background: transparent;
+  border-radius:10px;
+  border: 1px dashed rgba(255,255,255,0.03);
+  height:44px;
+}
+
+/* action row inside upload panel */
+#uploadPanel .actions {
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+  align-items:center;
+  padding: 10px 12px 8px;
+  border-top: 1px solid rgba(255,255,255,0.02);
+  background: linear-gradient(180deg, rgba(11,13,26,0.0), rgba(11,13,26,0.9));
+}
+
+/* smaller progress text */
+#uploadProgressSmall { color: var(--muted); min-width:80px; font-weight:700; }
+
+/* ensure modal-close button matches theme */
+#uploadPanel .modal-close { background:transparent; border:0; color:var(--muted); font-size:18px; cursor:pointer; padding:6px 8px; border-radius:8px; }
+
+/* responsive */
+@media (max-width:520px) {
+  #uploadPanel { width: min(94vw, 420px); padding:10px; }
+  #uploadPanel .modal-body { padding:10px; }
+  #uploadPanel .actions { padding:8px 10px; }
+  .fab { right:12px; bottom:12px; }
+}
+
+/* subtle appear animation for upload panel */
+@keyframes popIn {
+  from { transform: translateY(8px) scale(.98); opacity:0; }
+  to   { transform: translateY(0) scale(1); opacity:1; }
+}
+#uploadPanel { animation: popIn .18s cubic-bezier(.2,.9,.3,1); }
+
+/* helpful small utility for centering content inside panel body */
+.upload-row { display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+
+/* ensure the upload modal doesn't override existing modal rules elsewhere */
+#uploadModal.hidden { display:none !important; }
+
+/* Ensure How To modal sits above mobile-warning overlay */
+#howToModal { z-index: 150; }
+
+
+
+
+
+
+
+
+/* ===== Spotlight Focus (blur everything except a target) ===== */
+.hp-spotlight{
+  position:fixed; inset:0;
+  z-index:100001;                    /* above your #mobileWarningOverlay (99999) */
+  pointer-events:none;
+  backdrop-filter: blur(8px) saturate(.9) brightness(.9);
+  background: rgba(6,10,18,.45);
+
+  /* dynamic hole position + radius set by JS */
+  --sx: 50vw; --sy: 50vh; --sr: 120px;
+
+  /* cut a hole with mask (works on Chrome/Safari/Edge; FF uses mask too) */
+  -webkit-mask: radial-gradient(circle var(--sr) at var(--sx) var(--sy),
+                  transparent 98%, #000 100%);
+  mask: radial-gradient(circle var(--sr) at var(--sx) var(--sy),
+         transparent 98%, #000 100%);
+
+  opacity:0; transition: opacity .18s ease;
+  will-change: opacity, -webkit-mask, mask;
+}
+.hp-spotlight.show{ opacity:1; }
+
+.hp-spotlight-ring{
+  position:fixed; z-index:100002; pointer-events:none;
+  transform: translate(-50%,-50%);
+  border-radius:16px;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 10px rgba(255,255,255,.12);
+  width:100px; height:60px;          /* JS resizes */
+  opacity:0; transition: opacity .18s ease;
+}
+.hp-spotlight-ring.show{ opacity:1; }
+
+.hp-spotlight-arrow{
+  position:fixed; z-index:100003; pointer-events:none;
+  width:180px; height:90px;          /* curved arrow svg size */
+  opacity:0; transition: opacity .18s ease;
+}
+.hp-spotlight-arrow.show{ opacity:1; }
+
+.hp-spotlight-note{
+  position:fixed; z-index:100004; pointer-events:none;
+  max-width: 280px;
+  background:#0b1020; color:#e7efff;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px; padding:10px 12px;
+  font-size:13px; line-height:1.35;
+  box-shadow:0 14px 36px rgba(2,6,23,.6);
+  opacity:0; transition: opacity .18s ease;
+}
+.hp-spotlight-note.show{ opacity:1; }
+.hp-spotlight-note::after{
+  content:""; position:absolute; width:0; height:0; border:8px solid transparent;
+  border-top-color:#0b1020; bottom:-16px; left:24px; /* arrow-up by default */
+}
+.hp-spotlight-note[data-pos="below"]::after{
+  border-top-color:transparent; border-bottom-color:#0b1020; top:-16px; bottom:auto;
+}
+
+/* (Optional) reduce blur on very low-end devices */
+@media (prefers-reduced-transparency: reduce){
+  .hp-spotlight{ backdrop-filter:none; background:rgba(0,0,0,.55); }
+}

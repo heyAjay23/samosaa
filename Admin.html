@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ScoopyGame — Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="Admin.css" />
+</head>
+<body>
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <div class="brand">ScoopyGame Admin</div>
+      <nav class="nav">
+        <button id="nav-dashboard" class="nav-btn active">Dashboard</button>
+        <button id="nav-packs" class="nav-btn">Packs</button>
+        <button id="nav-logout" class="nav-btn">Sign Out</button>
+      </nav>
+      <div class="sidebar-footer">
+        <small>Logged in as: <span id="adminUid">—</span></small>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="main-header">
+        <h1>Packs Manager</h1>
+        <p class="muted">Add frames and movie names per round. Save to Firestore → packs/{roundId}.</p>
+      </header>
+
+      <section class="card">
+        <div class="row">
+          <div class="col">
+            <label for="roundSelect">Round</label>
+            <select id="roundSelect">
+              <option value="hollywood">Hollywood Movies</option>
+              <option value="indian">Indian Movies</option>
+              <!-- Changed value from "actors" to "dialogue" so Game loads packs/dialogue -->
+              <option value="dialogue">Guess the Dialogue</option>
+            </select>
+          </div>
+
+          <div class="col">
+            <label for="imgUrl">Image URL</label>
+            <input id="imgUrl" type="url" placeholder="https://..." />
+          </div>
+
+          <div class="col">
+            <label for="movieName">Movie / Actor Name</label>
+            <input id="movieName" type="text" placeholder="Movie or actor name" />
+          </div>
+
+          <div class="col actions-col">
+            <button id="addBtn" class="btn primary">Add to list</button>
+            <button id="clearListBtn" class="btn">Clear list</button>
+          </div>
+        </div>
+
+        <div class="row small-gap">
+          <div class="col full">
+            <label for="previewList">Preview list (order will be saved)</label>
+            <ul id="previewList" class="preview-list"></ul>
+          </div>
+        </div>
+
+        <div class="row small-gap">
+          <div class="col full right">
+            <button id="savePackBtn" class="btn success">Save pack to Firestore</button>
+            <button id="loadPackBtn" class="btn">Load pack from Firestore</button>
+          </div>
+        </div>
+
+        <div id="statusBar" class="status muted"></div>
+      </section>
+
+      <section class="card meta">
+        <h3>Notes</h3>
+        <ul>
+          <li>Each item saved as <code>{ url: "...", name: "..." }</code> in Firestore under <code>packs/{roundId}</code>.</li>
+          <li>Use public image URLs (no Storage required).</li>
+          <li>If Firestore returns permission errors, update your rules to allow writes for packs.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="Admin.js"></script>
+</body>
+</html>
