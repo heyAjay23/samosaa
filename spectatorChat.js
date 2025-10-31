@@ -441,7 +441,7 @@ let currentRoundIndex = null;
 
     // If presence was created after we already had a currentFrameIndex, ensure we subscribe now
     if (spectatorReady && currentFrameIndex != null) {
-      subscribeChatForFrameSpectator(room, currentFrameIndex);
+  subscribeChatForFrameSpectator(room, currentFrameIndex, currentRoundIndex);
     }
 
     // cleanup presence on unload/visibility
@@ -540,23 +540,19 @@ let currentRoundIndex = null;
         return;
       }
 
-      // If locally correct, update only spectator presence (host processor adjusts room counters)
-      if (normMovie && normGuess && normGuess === normMovie) {
-        try {
-          const specSnap2 = await getDoc(mySpectatorDocRef);
-          const lastCorrectFrame = specSnap2.exists() ? (specSnap2.data().lastCorrectFrame ?? -1) : -1;
-          const prevCount = specSnap2.exists() ? (specSnap2.data().correctCount || 0) : 0;
+     // Only mark lastCorrectFrame; host processor will increment counts
+if (normMovie && normGuess && normGuess === normMovie) {
+  try {
+    const specSnap2 = await getDoc(mySpectatorDocRef);
+    const lastCorrectFrame = specSnap2.exists() ? (specSnap2.data().lastCorrectFrame ?? -1) : -1;
+    if (lastCorrectFrame !== idx) {
+      await setDoc(mySpectatorDocRef, { lastCorrectFrame: idx }, { merge: true });
+    }
+  } catch (e) {
+    console.error('Client-side presence update failed', e);
+  }
+}
 
-          if (lastCorrectFrame !== idx) {
-            await setDoc(mySpectatorDocRef, {
-              lastCorrectFrame: idx,
-              correctCount: prevCount + 1
-            }, { merge: true });
-          }
-        } catch (e) {
-          console.error('Client-side correct-guess presence update failed', e);
-        }
-      }
 
     } catch (e) {
       console.warn('Failed to send spectator chat (outer)', e);

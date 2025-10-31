@@ -1,4 +1,4 @@
-﻿// game.js â€” FULL updated file (functional)
+// game.js — FULL updated file (functional)
 // Note: This is the complete, working source. If you strictly need the file to exceed 1891 lines,
 // append extra comment lines at the very bottom (e.g., `// pad` repeated) in your editor.
 
@@ -38,22 +38,22 @@ const CLEAN_BUZZ_ON_ADVANCE = true;
 
 const ROUNDS = [
   { id: "hollywood", label: "Hollywood Movies" },
-  { id: "indian",    label: "Bollywood in English" },
-  { id: "dialogue",  label: "Movie name blanks" }
+  { id: "indian",    label: "Indian Movies" },
+  { id: "dialogue",  label: "Guess the Dialogue" }
 ];
 
 const CHAR_RAW_BASE = "https://raw.githubusercontent.com/heyAjay23/logos/main/";
 const CHARACTERS = [
-  { id:'supersuper', name:'SuperSuper',     file:'SuperSuper.jpg',     emoji:'ðŸ¥‡' },
-  { id:'wvish',      name:'Wvish',          file:'Wvish.jpg',          emoji:'âœ¨' },
-  { id:'moviestalk', name:'Moviestalk',     file:'Moviestalk.jpg',     emoji:'ðŸŽ¬' },
-  { id:'desinerd',   name:'DesiNerd',       file:'Desi ners.jpg',      emoji:'ðŸ§ ' },
-  { id:'bnftb',      name:'Bnftb',          file:'bnftv.jpeg',         emoji:'ðŸŽ§' },
-  { id:'thepj',      name:'ThePJ',          file:'pj.jpg',             emoji:'ðŸŽ­' },
-  { id:'comicverse', name:'Comicverse',     file:'comicverse.jpeg',    emoji:'ðŸ–¼' },
-  { id:'abhireview', name:'Abhi Review',    file:'abhi review.jpeg',   emoji:'ðŸ“' },
-  { id:'surajkumar', name:'Suraj Kumar',    file:'images.jpeg',        emoji:'ðŸŽ¤' },
-  { id:'yogi',       name:'Yogi Bolta Hai', file:'yogi.jpg',           emoji:'ðŸ—£' }
+  { id:'supersuper', name:'SuperSuper',     file:'SuperSuper.jpg',     emoji:'🥇' },
+  { id:'wvish',      name:'Wvish',          file:'Wvish.jpg',          emoji:'✨' },
+  { id:'moviestalk', name:'Moviestalk',     file:'Moviestalk.jpg',     emoji:'🎬' },
+  { id:'desinerd',   name:'DesiNerd',       file:'Desi ners.jpg',      emoji:'🧠' },
+  { id:'bnftb',      name:'Bnftb',          file:'bnftv.jpeg',         emoji:'🎧' },
+  { id:'thepj',      name:'ThePJ',          file:'pj.jpg',             emoji:'🎭' },
+  { id:'comicverse', name:'Comicverse',     file:'comicverse.jpeg',    emoji:'🖼' },
+  { id:'abhireview', name:'Abhi Review',    file:'abhi review.jpeg',   emoji:'📝' },
+  { id:'surajkumar', name:'Suraj Kumar',    file:'images.jpeg',        emoji:'🎤' },
+  { id:'yogi',       name:'Yogi Bolta Hai', file:'yogi.jpg',           emoji:'🗣' }
 ].map(c => ({ ...c, url: CHAR_RAW_BASE + encodeURIComponent(c.file) }));
 
 const REPO_RAW_BASES = {
@@ -119,7 +119,7 @@ if (!room) room = (prompt("Enter room code") || "").toUpperCase();
 if (!name) name = prompt("Enter your name") || "Player";
 localStorage.setItem("playerName", name);
 
-if (roomVal) roomVal.textContent = room || "â€”";
+if (roomVal) roomVal.textContent = room || "—";
 if (nameVal) nameVal.textContent = name;
 
 /* -------------------- state -------------------- */
@@ -179,7 +179,7 @@ async function pickAndSetReferee(roomCode) {
   // Determine pool = players who have NOT been referee yet this cycle
   const pool = allPlayers.filter(uid => !used.includes(uid));
 
-  // If everyone has been referee â†’ reset for new cycle
+  // If everyone has been referee → reset for new cycle
   const actualPool = pool.length > 0 ? pool : allPlayers;
 
   // Choose one from actual pool
@@ -344,8 +344,8 @@ async function loadPackToRoom(roomCode, roundIndex){
 // 4) write playlist to room doc so clients will react
 try {
   // Auto pick referee only if host enabled referee rotation
- // Auto pick referee only if host enabled referee rotation â€” prefer a new person each round
-// ðŸ” Round-robin referee pick (only if auto enabled)
+ // Auto pick referee only if host enabled referee rotation — prefer a new person each round
+// 🔁 Round-robin referee pick (only if auto enabled)
 const roomSnap2 = await getDoc(roomDoc(roomCode));
 const roomData2 = roomSnap2.exists() ? (roomSnap2.data() || {}) : {};
 const autoRef = !!roomData2.refereeAuto;
@@ -363,7 +363,7 @@ if (autoRef) {
   // pool = players who have NOT been referee in this cycle
   let pool = allIds.filter(uid => !nextUsed.includes(uid));
 
-  // everyone already served â†’ reset cycle
+  // everyone already served → reset cycle
   if (pool.length === 0) {
     nextUsed = [];
     pool = allIds.slice();
@@ -603,7 +603,7 @@ async function adjustScore(targetUid, delta = 10) {
     showActionToast(`${delta >= 0 ? '+' : ''}${delta} to player`);
   } catch (err) {
     console.error("adjustScore failed", err);
-    showActionToast("Score update failed â€” check console");
+    showActionToast("Score update failed — check console");
   }
 }
 
@@ -618,49 +618,37 @@ async function pressBuzzerOnce(roomCode, frameIndex, roundIndex, uid, playerName
       name: playerName || "Player",
       ts: serverTimestamp(),
       uid,
-      roundIndex: Number(roundIndex ?? 0)   // ðŸ‘ˆ store the round to avoid cross-round bleed
-    });                                                                   
+      roundIndex: Number(roundIndex ?? 0)   // 👈 store the round to avoid cross-round bleed
+    });
   });
 }
 
 
 
 /* Watch my own buzz doc for the current frame and auto-disable the buzzer */
-function watchMyBuzzDoc(roomCode, frameIdx, roundIndex) {
+function watchMyBuzzDoc(roomCode, frameIdx) {
+  // cleanup old watcher
   if (myBuzzDocUnsub) { try { myBuzzDocUnsub(); } catch(_){} myBuzzDocUnsub = null; }
-
   if (!roomCode || frameIdx == null || !myUid) {
-    setBuzzerEnabled(false);
-    if (buzzerStatus) buzzerStatus.textContent = "";
+    setBuzzerEnabled(false); // safest default when unknown state
     return;
   }
-
   try {
     const myBuzzDocRef = doc(db, "rooms", roomCode, "frames", String(frameIdx), "buzzes", myUid);
-
     myBuzzDocUnsub = onSnapshot(myBuzzDocRef, (snap) => {
-      const data = snap.exists() ? (snap.data() || {}) : null;
-
-      // ✅ Only count as "buzzed" if roundIndex matches current round
-      const sameRound = data && Number(data.roundIndex ?? -1) === Number(roundIndex ?? -1);
-
-      setBuzzerEnabled(!sameRound);
-
-      if (sameRound) {
-        if (buzzerStatus) buzzerStatus.textContent = "You buzzed!";
-      } else {
-        if (buzzerStatus) buzzerStatus.textContent = "";
-      }
+      const exists = snap.exists();
+      // If I already buzzed, disable until the frame changes
+      setBuzzerEnabled(!exists);
+      if (exists && buzzerStatus) buzzerStatus.textContent = "You buzzed!";
+      if (!exists && buzzerStatus) buzzerStatus.textContent = "";
     }, (err) => {
       console.warn("watchMyBuzzDoc error", err);
+      // conservative: disable on error to avoid double buzzing
       setBuzzerEnabled(false);
-      if (buzzerStatus) buzzerStatus.textContent = "";
     });
-
   } catch (e) {
     console.warn("watchMyBuzzDoc failed", e);
     setBuzzerEnabled(false);
-    if (buzzerStatus) buzzerStatus.textContent = "";
   }
 }
 
@@ -751,7 +739,7 @@ window.addEventListener('spectatorGuessCorrect', (e) => {
     if (uid) markSpectatorCorrect(uid, name);
   } catch (err) { console.warn(err); }
 });
-// ðŸ”§ Helper: safely get the movie name for a given frame index
+// 🔧 Helper: safely get the movie name for a given frame index
 function getMovieName(frameIdx) {
   try {
     const rs = document.getElementById('movieFrame');
@@ -781,7 +769,7 @@ let hostCorrectPending = [];
 let hostCorrectTimer = null;
 
 function startHostCorrectProcessor(roomCode, frameIdx, roundIndex /*, currentFrameGlobal */) {
-  console.log("âœ… Optimized Host Correct Processor started for frame", frameIdx, "round", roundIndex);
+  console.log("✅ Optimized Host Correct Processor started for frame", frameIdx, "round", roundIndex);
 
   // prevent duplicate listeners
   if (hostCorrectProcUnsub) {
@@ -856,7 +844,7 @@ async function processHostCorrectPending(roomCode) {
   batch.set(perFrameRef, { uid, name, ts: serverTimestamp(), roundIndex }, { merge: true });
   batch.set(specRef,     { name, correctCount: increment(1) }, { merge: true });
   batch.update(roomRef, {
-    spectatorCorrectCount: increment(1),   // ðŸ‘ˆ keep per-frame tally accurate
+    spectatorCorrectCount: increment(1),   // 👈 keep per-frame tally accurate
     lastSpectatorGuessName: name,
     lastSpectatorGuessUid: uid
   });
@@ -865,9 +853,9 @@ async function processHostCorrectPending(roomCode) {
 }
 
     await batch.commit();
-    console.log(`âœ… Processed ${toProcess.length} spectator correct(s)`);
+    console.log(`✅ Processed ${toProcess.length} spectator correct(s)`);
   } catch (e) {
-    console.error("âŒ Host Correct Processor failed:", e);
+    console.error("❌ Host Correct Processor failed:", e);
   }
 }
 
@@ -930,7 +918,7 @@ function subscribePlayerViewCorrectChatsForFrame(roomCode, frameIdx, roundIndex)
   wrapper.appendChild(nameSpan);
 
   const textNode = document.createElement('span');
-  // ðŸ‘‡ match the screenshot wording
+  // 👇 match the screenshot wording
   textNode.textContent = '  guessed the movie correct';
   wrapper.appendChild(textNode);
 
@@ -1056,7 +1044,7 @@ function renderPlayers(arr) {
     const logoEl = makePlayerLogoElement(p);
     left.appendChild(logoEl);
 
-    // â­ referee star on avatar
+    // ⭐ referee star on avatar
 const isRef = window.currentRoomData && window.currentRoomData.refereeUid === p.id;
 
 // ---- Clean up any previous overlays (important on re-render) ----
@@ -1129,10 +1117,10 @@ if (isRef) {
     nameLine.style.fontWeight = "700";
 
     const nameText = document.createElement("span");
-    nameText.textContent = `${p.name || "Player"}${p.host ? " ðŸ‘‘" : ""}`;
+    nameText.textContent = `${p.name || "Player"}${p.host ? " 👑" : ""}`;
     nameLine.appendChild(nameText);
 
-    // ðŸŸ¡ this time we APPEND the referee label (not overwrite text)
+    // 🟡 this time we APPEND the referee label (not overwrite text)
     if (isRef) {
       const tag = document.createElement("span");
       tag.textContent = "Referee";
@@ -1308,7 +1296,7 @@ function showWinnerModalBoth(players, spectators) {
   card.style.alignItems = 'center';
 
   const title = document.createElement('div');
-  title.textContent = 'ðŸ† Round Results';
+  title.textContent = '🏆 Round Results';
   title.style.fontWeight = '900';
   title.style.fontSize = '20px';
   card.appendChild(title);
@@ -1435,7 +1423,7 @@ function showWinnerModalBoth(players, spectators) {
       countEl.style.color = '#08121a';
       countEl.style.padding = '6px 10px';
       countEl.style.borderRadius = '999px';
-      countEl.textContent = `${Number(s.correctCount||0)} âœ”`;
+      countEl.textContent = `${Number(s.correctCount||0)} ✔`;
 
       row.appendChild(l);
       row.appendChild(countEl);
@@ -1617,7 +1605,7 @@ function showHostControls(on){
           showActionToast(lockBtn.textContent.includes("Unlock") ? "Room locked" : "Room unlocked");
         } catch (e) {
           console.warn("Lock toggle failed:", e);
-          showActionToast("Failed to toggle lock â€” check console");
+          showActionToast("Failed to toggle lock — check console");
         } finally {
           lockBtn.disabled = false;
         }
@@ -1644,14 +1632,14 @@ function ensureSpinnerStyles() {
   `;
   document.head.appendChild(st);
 }
-function setBtnLoading(btn, loading, fallbackLabel='â­ Next') {
+function setBtnLoading(btn, loading, fallbackLabel='⏭ Next') {
   if (!btn) return;
   ensureSpinnerStyles();
   if (loading) {
     if (!btn.dataset.label) btn.dataset.label = btn.textContent;
     btn.disabled = true;
     btn.classList.add('btn-loading');
-    btn.innerHTML = `<span class="spinner" aria-hidden="true"></span> Loadingâ€¦`;
+    btn.innerHTML = `<span class="spinner" aria-hidden="true"></span> Loading…`;
   } else {
     btn.classList.remove('btn-loading');
     btn.disabled = false;
@@ -1682,7 +1670,7 @@ function updateLayoutForChatPanel() {
   const board = document.querySelector('main.board');
   if (!board) return;
 
-  // chat is â€œvisibleâ€ only if the element exists and isnâ€™t hidden by class or CSS
+  // chat is “visible” only if the element exists and isn’t hidden by class or CSS
   const chatVisible =
     !!chatPanel &&
     !chatPanel.classList.contains('hidden') &&
@@ -1847,7 +1835,7 @@ function renderSpectatorsListCard(items=[]) {
     cc.style.color = "#08121a";
     cc.style.padding = "4px 10px";
     cc.style.borderRadius = "999px";
-    cc.textContent = `${Number(s.correctCount || 0)} âœ”`;
+    cc.textContent = `${Number(s.correctCount || 0)} ✔`;
     right.appendChild(cc);
 
     row.appendChild(right);
@@ -2022,7 +2010,7 @@ buzzerBtn?.addEventListener("click", async ()=> {
   buzzerBtn.disabled = true; // optimistic disable
   try {
     const idx  = currentFrameIndex ?? 0;
-    const rIdx = (window.currentRoomData?.roundIndex ?? 0);  // ðŸ‘ˆ current round
+    const rIdx = (window.currentRoomData?.roundIndex ?? 0);  // 👈 current round
     await pressBuzzerOnce(room, idx, rIdx, myUid, name);
     if (buzzerStatus) buzzerStatus.textContent = "You buzzed!";
     // No re-enable here; watchMyBuzzDoc will keep it disabled for this frame.
@@ -2030,7 +2018,7 @@ buzzerBtn?.addEventListener("click", async ()=> {
     if (String(e?.message || "").toLowerCase().includes("already buzzed")) {
       if (buzzerStatus) buzzerStatus.textContent = "You already buzzed.";
     } else {
-      if (buzzerStatus) buzzerStatus.textContent = "Error â€” try again.";
+      if (buzzerStatus) buzzerStatus.textContent = "Error — try again.";
       setTimeout(()=> setBuzzerEnabled(true), 800);
     }
   }
@@ -2043,7 +2031,7 @@ signInAnonymously(auth).catch(()=>{});
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
   if (!room) {
-    showActionToast("Room missing â€” returning home");
+    showActionToast("Room missing — returning home");
     setTimeout(()=> location.href = "HomePage.html", 900);
     return;
   }
@@ -2053,7 +2041,7 @@ onAuthStateChanged(auth, async (user) => {
   myUid = user.uid;
 
   try {
-    if (statusEl) statusEl.textContent = "Joining roomâ€¦";
+    if (statusEl) statusEl.textContent = "Joining room…";
     await ensureRoomAndMaybeClaimHost(room, myUid);
 
     const rs = await getDoc(roomDoc(room));
@@ -2077,7 +2065,7 @@ onAuthStateChanged(auth, async (user) => {
       const roomData = roomSnap.exists() ? roomSnap.data() : {};
       const locked = !!roomData.locked;
       if (locked && !(roomData.hostUid === myUid)) {
-        showActionToast("Room is locked â€” join as spectator", 2000);
+        showActionToast("Room is locked — join as spectator", 2000);
         setTimeout(()=> { location.href = "HomePage.html"; }, 1800);
         return;
       } else {
@@ -2246,7 +2234,7 @@ showRefereeButtonHostOnly(iAmHost && !endOfRound && !refereeOn);
   if (revealed && !endOfRound) {
     movieBox?.classList.remove("is-blurred");
     if (revealOverlay) revealOverlay.style.display = "none";
-    // Only enable if user hasnâ€™t already buzzed this frame
+    // Only enable if user hasn’t already buzzed this frame
     watchMyBuzzDoc(room, currentFrameIndex);
     if (showMovieBtn) showMovieBtn.disabled = false;
   } else {
@@ -2330,7 +2318,7 @@ if (spectatorCorrectCountEl)    spectatorCorrectCountEl.textContent    = correct
 if (mode !== "spectator" && !isSpectatorLocal) {
   subscribePlayerViewCorrectChatsForFrame(room, currentFrameIndex, roundIndex);
 } else {
-  // spectator chat is fully handled by spectatorChat.js â€“ ensure we don't keep a game.js listener around
+  // spectator chat is fully handled by spectatorChat.js – ensure we don't keep a game.js listener around
   try { if (gameChatUnsub) gameChatUnsub(); } catch(_) {}
   gameChatUnsub = null;
 }
@@ -2345,7 +2333,7 @@ attachBuzzListener(room, currentFrameIndex, roundIndex);
 
   // Start/stop the host-side correct processor (optimized version takes room only)
  
-// inside roomUnsub snapshot handler â€” after you computed idx and roundIndex and cf
+// inside roomUnsub snapshot handler — after you computed idx and roundIndex and cf
 if (iAmHost) {
   startHostCorrectProcessor(room, idx, roundIndex, cf); // pass roundIndex + cumulative currentFrame if you want
 } else if (hostCorrectProcUnsub) {
@@ -2401,7 +2389,7 @@ export function cleanupGameListeners() {
     msg.style.fontSize = "18px";
     msg.style.fontWeight = "800";
     msg.innerHTML = `
-      âš ï¸ This website is <span style="color:#ff8e8e">not optimized</span> for mobile yet.<br>
+      ⚠️ This website is <span style="color:#ff8e8e">not optimized</span> for mobile yet.<br>
       Please use a desktop or laptop for best experience.
     `;
     overlay.appendChild(msg);
@@ -2468,7 +2456,7 @@ export function cleanupGameListeners() {
     if (!el || !window.Spotlight) return;
     Spotlight.show(
       el,
-      "If chat, buzz order, or anything looks off, tap â€œGlitch? Reloadâ€ to instantly resync the game.",
+      "If chat, buzz order, or anything looks off, tap “Glitch? Reload” to instantly resync the game.",
       { duration: 8000, pad: 16 }
     );
     // only show once per browser
@@ -2488,7 +2476,7 @@ window.addEventListener('load', () => {
   setTimeout(() => {
     Spotlight.show(
       btn,
-      'If chat, buzz order, or anything looks off, tap â€œGlitch? Reloadâ€ to instantly resync the game.',
+      'If chat, buzz order, or anything looks off, tap “Glitch? Reload” to instantly resync the game.',
       { duration: 8000, pad: 18 }
     );
   }, 600);
@@ -2521,4 +2509,3 @@ document.addEventListener('DOMContentLoaded', () => {
   // Watch for class/style changes on the chat node
   new MutationObserver(sync).observe(chat, { attributes: true, attributeFilter: ['class', 'style'] });
 });
-

@@ -951,3 +951,39 @@ header + main.board.board--with-chat {
 
 
 
+
+
+.referee-badge {
+  animation: glowPulse 1.5s infinite ease-in-out;
+}
+@keyframes glowPulse {
+  0% { box-shadow: 0 0 4px rgba(255,215,0,0.4); transform: scale(1); }
+  50% { box-shadow: 0 0 12px rgba(255,215,0,0.9); transform: scale(1.15); }
+  100% { box-shadow: 0 0 4px rgba(255,215,0,0.4); transform: scale(1); }
+}
+.players-panel,
+.players-list,
+.player-row,
+.avatar-small {
+  overflow: visible !important;
+}
+
+.players-list .player-logo img {
+  border-radius: 50%;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.avatar-small img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.players-panel,
+.players-list .player-row,
+.players-list .avatar-small {
+  overflow: visible;
+}
