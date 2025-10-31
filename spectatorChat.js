@@ -242,7 +242,7 @@ let currentRoundIndex = null;
         const placeholder = document.createElement('div');
         placeholder.style.color = '#cfe4ff';
         placeholder.style.padding = '6px 8px';
-        placeholder.textContent = 'No chat messages for this frame yet.';
+        placeholder.textContent = 'Join as a Spectator to play with players.';
         chatList.appendChild(placeholder);
       } else {
         docs.forEach(docObj => {

@@ -916,7 +916,7 @@ function subscribePlayerViewCorrectChatsForFrame(roomCode, frameIdx, roundIndex)
         const placeholder = document.createElement('div');
         placeholder.style.color = '#cfe4ff';
         placeholder.style.padding = '6px 8px';
-        placeholder.textContent = 'No correct spectator guesses for this frame yet.';
+        placeholder.textContent = 'Join as a Spectator to play with players.';
         chatListEl.appendChild(placeholder);
       } else {
       rows.forEach(docObj => {
