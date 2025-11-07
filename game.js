@@ -1,4 +1,4 @@
-﻿// game.js â€” FULL updated file (functional)
+// game.js â€” FULL updated file (functional)
 // Note: This is the complete, working source. If you strictly need the file to exceed 1891 lines,
 // append extra comment lines at the very bottom (e.g., `// pad` repeated) in your editor.
 
@@ -28,7 +28,7 @@ const db = getFirestore(app);
 
 /* -------------------- small config -------------------- */
 const FRAMES_PER_ROUND = 10;
-const REVEAL_DELAY_MS = 1000;
+const REVEAL_DELAY_MS = 0;
 
 /* anti-spam: local cooldown between buzzes (per client) */
 const BUZZ_COOLDOWN_MS = 2000;
@@ -42,7 +42,8 @@ const ROUNDS = [
   { id: "dialogue",  label: "Movie name blanks" }
 ];
 
-const CHAR_RAW_BASE = "https://raw.githubusercontent.com/heyAjay23/logos/main/";
+// Faster CDN for static avatars
+const CHAR_RAW_BASE = "https://cdn.jsdelivr.net/gh/heyAjay23/logos@main/";
 const CHARACTERS = [
   { id:'supersuper', name:'SuperSuper',     file:'SuperSuper.jpg',     emoji:'ðŸ¥‡' },
   { id:'wvish',      name:'Wvish',          file:'Wvish.jpg',          emoji:'âœ¨' },
@@ -56,11 +57,13 @@ const CHARACTERS = [
   { id:'yogi',       name:'Yogi Bolta Hai', file:'yogi.jpg',           emoji:'ðŸ—£' }
 ].map(c => ({ ...c, url: CHAR_RAW_BASE + encodeURIComponent(c.file) }));
 
+// Use jsDelivr CDN (globally cached) for much faster first byte
 const REPO_RAW_BASES = {
-  hollywood: "https://raw.githubusercontent.com/heyAjay23/hollywood-/main/",
-  indian:    "https://raw.githubusercontent.com/heyAjay23/bollywood-frame/main/",
-  dialogue:  "https://raw.githubusercontent.com/heyAjay23/dialogue/main/"
+  hollywood: "https://cdn.jsdelivr.net/gh/heyAjay23/hollywood-@main/",
+  indian:    "https://cdn.jsdelivr.net/gh/heyAjay23/bollywood-frame@main/",
+  dialogue:  "https://cdn.jsdelivr.net/gh/heyAjay23/dialogue@main/"
 };
+
 
 /* -------------------- DOM refs -------------------- */
 const $ = s => document.querySelector(s);
@@ -294,7 +297,18 @@ async function ensureRoomAndMaybeClaimHost(roomCode, uid){
   });
   return ref;
 }
+/* ------- Edge image optimizer (resize + webp via images.weserv.nl) ------- */
+function optimizeImageUrl(url, width = 1280) {
+  try {
+    if (!url) return url;
+    // weserv wants URL *without* scheme
+    const u = url.replace(/^https?:\/\//, "");
+    return `https://images.weserv.nl/?url=${encodeURIComponent(u)}&w=${width}&we=1`; 
+    // &we=1 -> serve WebP/AVIF when the browser supports it
+  } catch { return url; }
+}
 
+// UPDATED: loadPackToRoom — uses optimized CDN-sized images so frames appear instantly
 async function loadPackToRoom(roomCode, roundIndex){
   const roundMeta = ROUNDS[roundIndex] || ROUNDS[0];
   const packRef = doc(db, "packs", roundMeta.id);
@@ -308,9 +322,10 @@ async function loadPackToRoom(roomCode, roundIndex){
       const files = data.files || [];
       pickedFiles = files.map((f, i) => {
         if (typeof f === "string") {
-          return { url: f, name: `Frame ${i + 1}` };
+          return { url: optimizeImageUrl(f, 1280), name: `Frame ${i + 1}` };
         }
-        return { url: f.url || f, name: f.name || `Frame ${i + 1}` };
+        const raw = f.url || f;
+        return { url: optimizeImageUrl(raw, 1280), name: f.name || `Frame ${i + 1}` };
       });
       console.log(`Loaded pack from packs/${roundMeta.id}, count=${pickedFiles.length}`);
     }
@@ -322,10 +337,10 @@ async function loadPackToRoom(roomCode, roundIndex){
   if (!pickedFiles.length) {
     const repoBase = REPO_RAW_BASES[roundMeta.id];
     if (repoBase) {
-      pickedFiles = Array.from({ length: FRAMES_PER_ROUND }, (_, i) => ({
-        url: `${repoBase}${encodeURIComponent(`frame${i + 1}.jpg`)}`,
-        name: `Frame ${i + 1}`
-      }));
+      pickedFiles = Array.from({ length: FRAMES_PER_ROUND }, (_, i) => {
+        const raw = `${repoBase}${encodeURIComponent(`frame${i + 1}.jpg`)}`;
+        return { url: optimizeImageUrl(raw, 1280), name: `Frame ${i + 1}` };
+      });
       console.log(`Using repo fallback for '${roundMeta.id}' base=${repoBase}`);
     }
   }
@@ -339,69 +354,54 @@ async function loadPackToRoom(roomCode, roundIndex){
     console.log("Using local placeholder frames as fallback.");
   }
 
-  // 4) write playlist to room doc so clients will react
- // 4) write playlist to room doc so clients will react
-// 4) write playlist to room doc so clients will react
-try {
-  // Auto pick referee only if host enabled referee rotation
- // Auto pick referee only if host enabled referee rotation â€” prefer a new person each round
-// ðŸ” Round-robin referee pick (only if auto enabled)
-const roomSnap2 = await getDoc(roomDoc(roomCode));
-const roomData2 = roomSnap2.exists() ? (roomSnap2.data() || {}) : {};
-const autoRef = !!roomData2.refereeAuto;
+  // 4) write playlist to room doc so clients will react (single fast write)
+  try {
+    // Round-robin referee pick (only if auto enabled)
+    const roomSnap2 = await getDoc(roomDoc(roomCode));
+    const roomData2 = roomSnap2.exists() ? (roomSnap2.data() || {}) : {};
+    const autoRef = !!roomData2.refereeAuto;
 
-let chosenRef = "";
-let nextUsed = Array.isArray(roomData2.refereeUsed) ? roomData2.refereeUsed.slice() : [];
+    let chosenRef = "";
+    let nextUsed = Array.isArray(roomData2.refereeUsed) ? roomData2.refereeUsed.slice() : [];
 
-if (autoRef) {
-  const playersSnap = await getDocs(playersCol(roomCode));
-  const allIds = playersSnap.docs.map(d => d.id);
+    if (autoRef) {
+      const playersSnap = await getDocs(playersCol(roomCode));
+      const allIds = playersSnap.docs.map(d => d.id);
+      nextUsed = nextUsed.filter(uid => allIds.includes(uid)); // keep only present players
+      let pool = allIds.filter(uid => !nextUsed.includes(uid));
+      if (pool.length === 0) { nextUsed = []; pool = allIds.slice(); }
+      if (pool.length) {
+        chosenRef = pool[Math.floor(Math.random() * pool.length)];
+        nextUsed.push(chosenRef);
+      }
+    }
 
-  // keep only players still in room
-  nextUsed = nextUsed.filter(uid => allIds.includes(uid));
+    await updateDoc(roomDoc(roomCode), {
+      playlist: pickedFiles,        // <-- optimized URLs
+      index: 0,
+      frameRevealed: false,
+      endOfRound: false,
+      movieNameRevealed: false,
+      revealedMovieName: "",
+      roundIndex,
+      round: roundIndex + 1,
+      roundId: roundMeta.id,
+      roundLabel: roundMeta.label,
+      roundBanner: `Starting ${roundMeta.label}`,
+      roundBannerAt: serverTimestamp(),
+      action: `Host loaded ${roundMeta.label}`,
+      spectatorCorrectCount: 0,
+      refereeUid: chosenRef || roomData2.refereeUid || "",
+      refereeUsed: nextUsed,
+    });
 
-  // pool = players who have NOT been referee in this cycle
-  let pool = allIds.filter(uid => !nextUsed.includes(uid));
-
-  // everyone already served â†’ reset cycle
-  if (pool.length === 0) {
-    nextUsed = [];
-    pool = allIds.slice();
+    // Preload the next few optimized frames for near-instant navigation
+    preloadFrames(pickedFiles, 0, 4);
+  } catch (e) {
+    console.warn("Could not update room playlist:", e);
   }
-
-  if (pool.length) {
-    chosenRef = pool[Math.floor(Math.random() * pool.length)];
-    nextUsed.push(chosenRef); // record usage in this cycle
-  }
 }
 
-
-  await updateDoc(roomDoc(roomCode), {
-    playlist: pickedFiles,
-    index: 0,
-    frameRevealed: false,
-    endOfRound: false,
-    movieNameRevealed: false,
-    revealedMovieName: "",
-    roundIndex,
-    round: roundIndex + 1,
-    roundId: roundMeta.id,
-    roundLabel: roundMeta.label,
-    roundBanner: `Starting ${roundMeta.label}`,
-    roundBannerAt: serverTimestamp(),
-    action: `Host loaded ${roundMeta.label}`,
-    spectatorCorrectCount: 0,
-refereeUid: chosenRef || roomData2.refereeUid || "",
-refereeUsed: nextUsed,
-  });
-
-  preloadFrames(pickedFiles, 0, 4);
-} catch (e) {
-  console.warn("Could not update room playlist:", e);
-}
-
-
-}
 
 async function assignNewHostIfNeeded(players){
   const ref = roomDoc(room);
@@ -1699,6 +1699,31 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(updateLayoutForChatPanel, 200); // belt-and-suspenders for late CSS/fonts
 });
 
+/* ---------- Reveal gate: wait for current image to load ---------- */
+let _frameReady = false;
+let _frameLoadToken = 0;
+
+function setRevealEnabled(on) {
+  if (!revealBtn) return;
+  revealBtn.disabled = !on;
+  revealBtn.setAttribute("aria-disabled", String(!on));
+  revealBtn.classList.toggle("is-disabled", !on);
+}
+
+function waitForImageElement(el) {
+  return new Promise((resolve) => {
+    if (!el) return resolve(false);
+    if (el.complete && el.naturalWidth > 0) return resolve(true);
+    const onLoad = () => { cleanup(); resolve(true); };
+    const onErr  = () => { cleanup(); resolve(false); };
+    function cleanup(){
+      el.removeEventListener('load', onLoad);
+      el.removeEventListener('error', onErr);
+    }
+    el.addEventListener('load', onLoad, { once: true });
+    el.addEventListener('error', onErr, { once: true });
+  });
+}
 
 
 /* -------------------- Image preloading helpers -------------------- */
@@ -1721,7 +1746,8 @@ function preloadFrames(playlist = [], index = 0, ahead = 3) {
     const end = Math.min(playlist.length - 1, index + ahead);
     for (let i = start; i <= end; i++) {
       const item = playlist[i];
-      const url = typeof item === 'string' ? item : (item && item.url) ? item.url : null;
+const raw = typeof item === 'string' ? item : (item && item.url) ? item.url : null;
+const url = raw ? optimizeImageUrl(raw, 1280) : null;
       if (url) preloadImage(url);
     }
   } catch (e) {
@@ -1895,8 +1921,12 @@ let refereeBtn = null;
 
 function ensureRefereeBtnNearBuzzer() {
   if (refereeBtn) return refereeBtn;
-  const buzzerRow = document.getElementById('buzzerBtn')?.parentElement;
-  if (!buzzerRow) return null;
+
+  // Anchor the Referee button to the container even if #buzzerBtn doesn't exist
+  const anchor =
+    document.getElementById('buzzerArea') ||
+    document.getElementById('buzzerBtn')?.parentElement;
+  if (!anchor) return null;
 
   refereeBtn = document.createElement('button');
   refereeBtn.id = 'refereeBtn';
@@ -1923,13 +1953,13 @@ function ensureRefereeBtnNearBuzzer() {
     try {
       await enableRefereeRotation(room);
       showActionToast("Referee mode enabled");
-      refereeBtn.style.display = "none"; // remove button after activation
+      refereeBtn.style.display = "none"; // hide after activation
     } finally {
       refereeBtn.disabled = false;
     }
   });
 
-  buzzerRow.appendChild(refereeBtn);
+  anchor.appendChild(refereeBtn);
   return refereeBtn;
 }
 
@@ -1989,21 +2019,27 @@ nextFrameBtn?.addEventListener("click", async () => {
 });
 
 /* Reveal with short delay (REVEAL_DELAY_MS) */
-revealBtn?.addEventListener("click", async ()=> {
+/* INSTANT REVEAL — NO DELAY, SINGLE ATOMIC WRITE */
+revealBtn?.addEventListener("click", async () => {
   if (!iAmHost) return;
-  try { await updateDoc(roomDoc(room), { action: "Host is preparing to reveal the frame..." }); } catch(_) {}
-  showCornerStatus(`Revealing in ${Math.round(REVEAL_DELAY_MS/1000)}s...`);
-  try { await updateDoc(roomDoc(room), { action: `Revealing in ${Math.round(REVEAL_DELAY_MS/1000)}s...` }); } catch(_) {}
-  setTimeout(async ()=> {
-    try {
-      await updateDoc(roomDoc(room), { frameRevealed: true, action: "Host revealed the frame" });
-    } catch(e) {
-      console.warn("Reveal update failed", e);
-    } finally {
-      showCornerStatus("");
-    }
-  }, REVEAL_DELAY_MS);
+    if (!_frameReady) { showActionToast("Still loading the frame…"); return; }
+
+  // Local instant UI update for host
+  movieBox?.classList.remove("is-blurred");
+  if (revealOverlay) revealOverlay.style.display = "none";
+
+  // Write only 1 field so Firestore syncs faster
+  try {
+    await updateDoc(roomDoc(room), { frameRevealed: true });
+  } catch (e) {
+    console.warn("Instant reveal failed:", e);
+  }
+
+  // Enable buzzer immediately (host side)
+  const rIdx = (window.currentRoomData?.roundIndex ?? 0);
+  watchMyBuzzDoc(room, currentFrameIndex ?? 0, rIdx);
 });
+
 
 showMovieBtn?.addEventListener("click", async ()=> {
   if(!iAmHost) return;
@@ -2153,7 +2189,7 @@ try {
 let lastIndex = null;
 let lastRoundIndex = null;
 
-roomUnsub = onSnapshot(roomDoc(room), (snap) => {
+roomUnsub = onSnapshot(roomDoc(room), { includeMetadataChanges: true }, (snap) => {
   
   const d = snap.data() || {};
 
@@ -2198,18 +2234,45 @@ showRefereeButtonHostOnly(iAmHost && !endOfRound && !refereeOn);
   // Set current frame image + name
   const pl = d.playlist || [];
   const item = pl[idx];
-  if (item) {
-    if (typeof item === "string") {
-      if (movieFrame) movieFrame.src = item;
-      currentMovieName = "Unknown";
-    } else {
-      if (movieFrame) movieFrame.src = item.url || "movie1.jpg";
-      currentMovieName = item.name || ("Frame " + (idx + 1));
-    }
-  } else {
-    if (movieFrame) movieFrame.src = "movie1.jpg";
-    currentMovieName = "Unknown";
+if (movieFrame) {
+  movieFrame.loading = "eager";
+  movieFrame.decoding = "async";
+  movieFrame.setAttribute("fetchpriority", "high");
+}
+
+if (typeof item === "string") {
+  if (movieFrame) movieFrame.src = optimizeImageUrl(item, 1280);
+  currentMovieName = "Unknown";
+} else {
+  if (movieFrame) movieFrame.src = optimizeImageUrl(item.url || "movie1.jpg", 1280);
+  currentMovieName = item.name || ("Frame " + (idx + 1));
+}
+// ---- Gate reveal until current image is fully loaded on host ----
+if (iAmHost && !endOfRound) {
+  _frameReady = false;
+  setRevealEnabled(false);
+
+  // bump token to cancel older waits if frame changes quickly
+  const myToken = ++_frameLoadToken;
+
+  // Speed up: give the browser the right hints
+  if (movieFrame) {
+    movieFrame.loading = "eager";
+    movieFrame.decoding = "async";
+    movieFrame.setAttribute("fetchpriority", "high");
   }
+
+  // Wait for the <img> to finish loading (or error)
+  waitForImageElement(movieFrame).then(() => {
+    if (myToken !== _frameLoadToken) return; // frame changed, ignore
+    _frameReady = true;
+    setRevealEnabled(true); // host can now reveal
+  });
+} else {
+  // non-hosts don't control reveal
+  setRevealEnabled(false);
+}
+
   if (movieFrame) movieFrame.onerror = () => { movieFrame.src = "movie1.jpg"; };
 
   // Detect round/frame change to clear UI + unsubscribe old listeners
@@ -2247,8 +2310,7 @@ showRefereeButtonHostOnly(iAmHost && !endOfRound && !refereeOn);
     movieBox?.classList.remove("is-blurred");
     if (revealOverlay) revealOverlay.style.display = "none";
     // Only enable if user hasnâ€™t already buzzed this frame
-    watchMyBuzzDoc(room, currentFrameIndex);
-    if (showMovieBtn) showMovieBtn.disabled = false;
+ watchMyBuzzDoc(room, currentFrameIndex, roundIndex);    if (showMovieBtn) showMovieBtn.disabled = false;
   } else {
     movieBox?.classList.add("is-blurred");
     if (revealOverlay) revealOverlay.style.display = "flex";
